@@ -1,4 +1,4 @@
-# ENMA-WG PoC
+﻿# ENMA-WG PoC
 
 **openBIM | MEP | Quantity Takeoff**
 
@@ -26,9 +26,18 @@ The project focuses on:
 - bSDD-based semantic enrichment
 - Reproducible openBIM workflows
 
+## Repository Structure
+
+- src/ : PoC source code
+- 	ests/ : tests
+- data/ : sample data information and data source notes
+- output/ : generated CSV and PoC output examples
+- docs/ : architecture and methodology
+- presentation/ : presentation materials
+
 ## Sample BIM Data
 
-The PoC uses the "Government Building BIM Model (Revit version)"
+The PoC uses the Government Building BIM Model (Revit version)
 published by the Ministry of Land, Infrastructure, Transport and Tourism
 (MLIT), Japan.
 
@@ -44,4 +53,3 @@ the MIT License.
 
 Third-party BIM data, documents and other materials are subject to their
 respective licenses and terms of use.
-
