@@ -1,44 +1,106 @@
-# ENMA-WG PoC Windows Development Environment Setup
+# ENMA-WG PoC Windows Development Environment Setup Guide
+
+**Document version:** 0.3\
+**Updated:** 2026-09-13\
+**Target repository:** `ENMA-WG/enma-poc`
+
+------------------------------------------------------------------------
+
+## Revision History
+
+  ------------------------------------------------------------------------
+  Date                                       Version Changes
+  --------------------- ---------------------------- ---------------------
+  2026-09-11                                     0.1 Initial Windows
+                                                     development
+                                                     environment setup
+                                                     guide.
+
+  2026-09-12                                     0.2 Added support for
+                                                     working folders on
+                                                     different drives and
+                                                     introduced the
+                                                     environment
+                                                     verification script.
+
+  2026-09-13                                     0.3 Reorganized the setup
+                                                     order based on actual
+                                                     Windows PC tests.
+                                                     Added GitHub
+                                                     permission notes,
+                                                     PowerShell
+                                                     ExecutionPolicy
+                                                     setup, initial/final
+                                                     environment checks,
+                                                     Git Credential
+                                                     Manager checks, and
+                                                     Git branch
+                                                     synchronization
+                                                     checks.
+  ------------------------------------------------------------------------
+
+------------------------------------------------------------------------
 
 ## 1. Overview
 
-This document describes how to set up the Windows development
-environment for the ENMA-WG proof-of-concept project.
+This document describes how to prepare a reproducible Windows
+development environment for the ENMA-WG PoC project.
 
-The objective is to create a reproducible development environment that
-can be used on company PCs, home PCs, and demonstration PCs.
+The same procedure is intended for company PCs, home PCs, notebook PCs,
+and demonstration PCs.
 
-The ENMA-WG PoC uses Python and IfcOpenShell to process IFC data for MEP
-quantity takeoff and related openBIM experiments.
+The working drive is **not fixed**. For example, the project may be
+placed under:
+
+``` text
+C:\ENMA-WG
+D:\ENMA-WG
+G:\ENMA-WG
+```
+
+In this guide, the parent working folder is written as:
+
+``` text
+<ENMA-WG>
+```
+
+After cloning the repository, commands should normally be executed from
+the repository root:
+
+``` text
+<ENMA-WG>\enma-poc
+```
+
+Once you are in the repository root, use relative paths whenever
+possible.
 
 ------------------------------------------------------------------------
 
 ## 2. Standard Environment
 
-The initial ENMA-WG development environment is based on:
+The standard ENMA-WG PoC environment is:
 
-  Component      Version
-  -------------- ------------------
-  OS             Windows 11
-  Python         3.11.9 (64-bit)
-  Git            Git for Windows
-  IfcOpenShell   0.8.5
-  Repository     ENMA-WG/enma-poc
+  Item                     Standard
+  ------------------------ -------------------------------------------
+  OS                       Windows 11
+  PowerShell               Windows PowerShell / PowerShell
+  Python                   3.11.9 (64-bit)
+  Git                      Git for Windows
+  Git Credential Manager   Included/recommended with Git for Windows
+  IfcOpenShell             0.8.5
+  Repository               `ENMA-WG/enma-poc`
+  Virtual environment      `.venv`
 
-Python libraries used by the project are managed with a Python virtual
-environment (`.venv`) and `requirements.txt`.
+Other Python versions may coexist on the same PC. The ENMA-WG virtual
+environment should use Python 3.11.9.
 
 ------------------------------------------------------------------------
 
 ## 3. Install Git for Windows
 
-Install Git for Windows if Git is not already installed.
+Install Git for Windows if it is not already available.
 
-Official website:
-
-https://git-scm.com/download/win
-
-After installation, open PowerShell and confirm that Git is available.
+After installation, open PowerShell and check:
 
 ``` powershell
 git --version
@@ -47,49 +109,211 @@ git --version
 Example:
 
 ``` text
-git version 2.39.0.windows.2
+git version 2.55.0.windows.5
 ```
 
-The exact Git version does not need to match this example.
+Also check Git Credential Manager:
+
+``` powershell
+git credential-manager --version
+```
+
+If a version number is displayed, Git Credential Manager is available.
 
 ------------------------------------------------------------------------
 
-## 4. Install Python 3.11.9
+## 4. Prepare the ENMA-WG Working Folder
 
-The standard Python version for the initial ENMA-WG PoC is:
+Choose a suitable drive and create the parent folder.
 
-``` text
-Python 3.11.9 (64-bit)
-```
-
-Download Python from the official Python website:
-
-https://www.python.org/downloads/release/python-3119/
-
-Select the Windows 64-bit installer.
-
-During installation, enable:
-
-``` text
-Add python.exe to PATH
-```
-
-After installation, close and reopen PowerShell.
-
-Check the installed Python version:
+Examples:
 
 ``` powershell
-python --version
+New-Item -ItemType Directory -Path "C:\ENMA-WG" -Force
+Set-Location "C:\ENMA-WG"
 ```
 
-Expected result:
+or:
+
+``` powershell
+New-Item -ItemType Directory -Path "D:\ENMA-WG" -Force
+Set-Location "D:\ENMA-WG"
+```
+
+or:
+
+``` powershell
+New-Item -ItemType Directory -Path "G:\ENMA-WG" -Force
+Set-Location "G:\ENMA-WG"
+```
+
+From this point onward, this guide refers to the selected folder as:
 
 ``` text
-Python 3.11.9
+<ENMA-WG>
 ```
 
-Check the Python installations recognized by the Windows Python
-Launcher:
+Do not assume that every developer uses the same drive letter.
+
+------------------------------------------------------------------------
+
+## 5. Confirm GitHub Repository Access
+
+The repository is:
+
+``` text
+https://github.com/ENMA-WG/enma-poc.git
+```
+
+The repository may be readable because it is public, but **read access
+and write access are different**.
+
+To push changes, the GitHub account used on the PC must have appropriate
+repository or ENMA-WG organization permissions.
+
+Important distinctions:
+
+-   `git config user.name` and `git config user.email` identify the
+    author of commits.
+-   GitHub browser login / Git Credential Manager authentication
+    identifies the GitHub account.
+-   Repository or organization permissions determine whether that
+    account can push.
+
+A successful GitHub login does not by itself guarantee push permission.
+
+------------------------------------------------------------------------
+
+## 6. Clone the GitHub Repository
+
+Move to the selected parent folder:
+
+``` powershell
+Set-Location "<ENMA-WG>"
+```
+
+Replace `<ENMA-WG>` with the actual path, for example:
+
+``` powershell
+Set-Location "D:\ENMA-WG"
+```
+
+Clone the repository:
+
+``` powershell
+git clone https://github.com/ENMA-WG/enma-poc.git
+```
+
+Move to the repository root:
+
+``` powershell
+Set-Location .\enma-poc
+```
+
+Confirm the location:
+
+``` powershell
+Get-Location
+```
+
+From this point onward, commands in this guide assume that PowerShell is
+at:
+
+``` text
+<ENMA-WG>\enma-poc
+```
+
+For example:
+
+``` text
+PS D:\ENMA-WG\enma-poc>
+```
+
+Therefore, run the environment checker as:
+
+``` powershell
+.\scripts\check_environment.ps1
+```
+
+Do **not** add another `.\enma-poc\` when you are already inside the
+repository root.
+
+------------------------------------------------------------------------
+
+## 7. Configure PowerShell Execution Policy
+
+PowerShell may prevent `.ps1` scripts from running on a newly configured
+PC.
+
+Check the current settings:
+
+``` powershell
+Get-ExecutionPolicy -List
+```
+
+For a personal or otherwise permitted Windows environment, the
+recommended user-level setting for this guide is:
+
+``` powershell
+Set-ExecutionPolicy -Scope CurrentUser RemoteSigned
+```
+
+Confirm the change:
+
+``` powershell
+Get-ExecutionPolicy -List
+```
+
+Example:
+
+``` text
+CurrentUser    RemoteSigned
+```
+
+If the PC is managed by an organization, follow the organization's
+security policy. Do not override Group Policy or other administrative
+security controls.
+
+------------------------------------------------------------------------
+
+## 8. Run the Initial Environment Check
+
+The repository contains:
+
+``` text
+scripts\check_environment.ps1
+```
+
+From the repository root, run:
+
+``` powershell
+.\scripts\check_environment.ps1
+```
+
+The checker is designed to work regardless of whether the repository is
+on `C:`, `D:`, `G:`, or another drive.
+
+On a newly cloned PC, warnings such as the following are expected before
+the Python environment has been created:
+
+``` text
+[WARN] Virtual Environment (.venv) not found
+[WARN] IfcOpenShell check skipped (.venv not found)
+```
+
+`WARN` does not necessarily mean that the setup has failed. At this
+stage it identifies items that still need to be configured.
+
+The checker does not test GitHub repository write permission by
+performing a push.
+
+------------------------------------------------------------------------
+
+## 9. Install and Confirm Python 3.11.9
+
+Install Python 3.11.9 (64-bit) if necessary.
+
+Check installed Python versions:
 
 ``` powershell
 py -0p
@@ -98,119 +322,57 @@ py -0p
 Example:
 
 ``` text
--V:3.11 * C:\Users\<username>\AppData\Local\Programs\Python\Python311\python.exe
+-V:3.14 *    C:\...\python.exe
+-V:3.11      C:\...\Python311\python.exe
 ```
 
-> **Note:** Multiple versions of Python may be installed on the same PC.
-> ENMA-WG therefore specifies Python 3.11 explicitly when creating the
-> virtual environment.
+Multiple Python versions may coexist.
 
-------------------------------------------------------------------------
-
-## 5. Create the ENMA-WG Working Folder
-
-The recommended Windows folder structure is:
-
-``` text
-G:\
-└─ ENMA-WG\
-   └─ enma-poc\
-```
-
-Create the parent folder:
+Confirm Python 3.11:
 
 ``` powershell
-New-Item -ItemType Directory -Path "G:\ENMA-WG" -Force
-Set-Location "G:\ENMA-WG"
-```
-
-If the PC does not have a `G:` drive, another local drive may be used.
-
-For example:
-
-``` text
-C:\ENMA-WG
-```
-
-or:
-
-``` text
-D:\ENMA-WG
-```
-
-The repository folder itself should remain named:
-
-``` text
-enma-poc
-```
-
-------------------------------------------------------------------------
-
-## 6. Clone the GitHub Repository
-
-Clone the ENMA-WG repository:
-
-``` powershell
-git clone https://github.com/ENMA-WG/enma-poc.git
-```
-
-Move into the repository:
-
-``` powershell
-Set-Location "G:\ENMA-WG\enma-poc"
-```
-
-Check the repository status:
-
-``` powershell
-git status
+py -3.11 --version
 ```
 
 Expected result:
 
 ``` text
-On branch main
-Your branch is up to date with 'origin/main'.
-
-nothing to commit, working tree clean
+Python 3.11.9
 ```
 
-Check the remote repository:
-
-``` powershell
-git remote -v
-```
-
-Expected result:
-
-``` text
-origin  https://github.com/ENMA-WG/enma-poc.git (fetch)
-origin  https://github.com/ENMA-WG/enma-poc.git (push)
-```
+The `py -3.11` form is used intentionally so that Python 3.11 is
+selected even when another Python version is the system default.
 
 ------------------------------------------------------------------------
 
-## 7. Create the Python Virtual Environment
+## 10. Create the Python Virtual Environment
 
-From the repository root:
+Make sure PowerShell is in the repository root:
 
 ``` text
-G:\ENMA-WG\enma-poc
+<ENMA-WG>\enma-poc
 ```
 
-create a Python 3.11 virtual environment:
+Create the virtual environment explicitly with Python 3.11:
 
 ``` powershell
 py -3.11 -m venv .venv
 ```
 
-Activate it:
+Do not copy `.venv` from another PC. Each PC should create its own
+virtual environment.
+
+------------------------------------------------------------------------
+
+## 11. Activate the Virtual Environment
+
+Activate `.venv`:
 
 ``` powershell
 .\.venv\Scripts\Activate.ps1
 ```
 
-After activation, the PowerShell prompt should begin with:
+The prompt should now begin with:
 
 ``` text
 (.venv)
@@ -219,10 +381,10 @@ After activation, the PowerShell prompt should begin with:
 For example:
 
 ``` text
-(.venv) PS G:\ENMA-WG\enma-poc>
+(.venv) PS D:\ENMA-WG\enma-poc>
 ```
 
-Check the Python version:
+Confirm Python:
 
 ``` powershell
 python --version
@@ -234,53 +396,21 @@ Expected result:
 Python 3.11.9
 ```
 
-Check which Python executable is being used:
+Confirm the executable being used:
 
 ``` powershell
 where.exe python
 ```
 
-The first entry should be:
+The first entry should point to:
 
 ``` text
-G:\ENMA-WG\enma-poc\.venv\Scripts\python.exe
+<ENMA-WG>\enma-poc\.venv\Scripts\python.exe
 ```
-
-This confirms that Python is running inside the ENMA-WG virtual
-environment.
 
 ------------------------------------------------------------------------
 
-## 8. PowerShell Execution Policy
-
-On some Windows PCs, PowerShell may prevent `Activate.ps1` from running.
-
-If an execution policy error occurs, check the current policy:
-
-``` powershell
-Get-ExecutionPolicy -List
-```
-
-A temporary solution for the current PowerShell session is:
-
-``` powershell
-Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
-```
-
-Then activate the virtual environment again:
-
-``` powershell
-.\.venv\Scripts\Activate.ps1
-```
-
-This changes the policy only for the current PowerShell process.
-
-Follow your organization's security policy when using a company-managed
-PC.
-
-------------------------------------------------------------------------
-
-## 9. Upgrade pip
+## 12. Upgrade pip
 
 With `.venv` activated:
 
@@ -288,7 +418,7 @@ With `.venv` activated:
 python -m pip install --upgrade pip
 ```
 
-Check the version if required:
+Check the installed pip version if required:
 
 ``` powershell
 python -m pip --version
@@ -296,16 +426,15 @@ python -m pip --version
 
 ------------------------------------------------------------------------
 
-## 10. Install ENMA-WG Python Dependencies
+## 13. Install ENMA-WG Python Dependencies
 
-The standard method for ENMA-WG members is to install the libraries from
-`requirements.txt`.
+Install the standard dependencies from the repository:
 
 ``` powershell
 python -m pip install -r requirements.txt
 ```
 
-The initial environment contains:
+The current standard environment includes:
 
 ``` text
 ifcopenshell==0.8.5
@@ -318,12 +447,12 @@ six==1.17.0
 typing_extensions==4.16.0
 ```
 
-Developers adding or updating Python packages should update
-`requirements.txt` as appropriate.
+When project dependencies are intentionally added or updated, update
+`requirements.txt` accordingly.
 
 ------------------------------------------------------------------------
 
-## 11. Verify IfcOpenShell
+## 14. Verify IfcOpenShell
 
 Confirm that IfcOpenShell can be imported:
 
@@ -337,20 +466,52 @@ Expected result:
 0.8.5
 ```
 
-Additional package information can be checked with:
+Additional information can be checked with:
 
 ``` powershell
 python -m pip show ifcopenshell
 ```
 
-If the version number is displayed without an error, the basic ENMA-WG
-Python/IFC environment is ready.
+------------------------------------------------------------------------
+
+## 15. Run the Final Environment Check
+
+From the repository root:
+
+``` powershell
+.\scripts\check_environment.ps1
+```
+
+A fully configured and synchronized environment should normally show no
+`NG` items and, when there are no outstanding warnings, a result similar
+to:
+
+``` text
+Result: 14 OK / 0 WARN / 0 NG
+
+[READY] ENMA PoC development environment is ready.
+```
+
+The exact number of checks may change as the checker is improved.
+
+A result such as:
+
+``` text
+[WARN] Local branch is ahead of origin/main by 1 commit(s)
+```
+
+does not mean the Python environment is broken. It means that one or
+more local commits have not yet been reflected in the locally known
+remote-tracking branch.
+
+The checker does not automatically run `git fetch` and does not
+automatically run `git push`.
 
 ------------------------------------------------------------------------
 
-## 12. Repository Structure
+## 16. Repository Structure
 
-The initial repository structure is:
+The repository is organized approximately as follows:
 
 ``` text
 enma-poc/
@@ -360,68 +521,82 @@ enma-poc/
 ├─ requirements.txt
 │
 ├─ src/
-│   └─ Python source code
+│  └─ Python source code
 │
 ├─ tests/
-│   └─ automated tests
+│  └─ automated tests
+│
+├─ scripts/
+│  └─ check_environment.ps1
 │
 ├─ data/
-│   └─ README.md
+│  └─ README.md
 │
 ├─ output/
-│   └─ generated CSV and PoC results
+│  └─ generated CSV and PoC results
 │
 ├─ docs/
-│   └─ project documentation
+│  └─ setup_windows.md
 │
 └─ presentation/
-    └─ presentation materials
+   └─ presentation materials
 ```
 
-The `.venv` directory is a local development environment and must not be
-committed to GitHub.
+The `.venv` directory is local to each PC and must not be committed to
+GitHub.
 
 ------------------------------------------------------------------------
 
-## 13. Sample BIM Data
+## 17. Sample BIM Data
 
-The ENMA-WG PoC uses BIM data published by the Ministry of Land,
-Infrastructure, Transport and Tourism (MLIT), Japan.
+The ENMA-WG PoC uses BIM data published by Japan's Ministry of Land,
+Infrastructure, Transport and Tourism (MLIT).
 
 The original BIM data is not distributed through this repository.
 
-See `data/README.md` for information about obtaining and preparing the
-sample BIM data.
+See:
 
-Each developer should obtain the original BIM data from the official
-source and prepare the IFC file locally.
+``` text
+data\README.md
+```
+
+for information about obtaining and preparing sample BIM data.
+
+Each developer should obtain the original data from the appropriate
+official source and prepare the required IFC files locally.
 
 Large BIM/IFC files should not be committed to the repository unless
-their redistribution and licensing conditions have been confirmed.
+redistribution and licensing conditions have been confirmed.
 
 ------------------------------------------------------------------------
 
-## 14. Basic Git Workflow
+## 18. Basic Git Workflow
 
-Before starting work, move to the repository:
+Before starting work, move to the repository root:
 
 ``` powershell
-Set-Location "G:\ENMA-WG\enma-poc"
+Set-Location "<ENMA-WG>\enma-poc"
 ```
 
-Activate the Python environment:
+Activate the environment:
 
 ``` powershell
 .\.venv\Scripts\Activate.ps1
 ```
 
-Check the Git status:
+Check the environment if necessary:
+
+``` powershell
+.\scripts\check_environment.ps1
+```
+
+Check repository status:
 
 ``` powershell
 git status
 ```
 
-Before beginning new work, synchronize with GitHub:
+Before beginning new work, synchronize with GitHub when appropriate:
 
 ``` powershell
 git pull
@@ -437,7 +612,7 @@ git push
 ```
 
 For collaborative development, feature branches and Pull Requests should
-normally be used instead of making substantial changes directly on
+normally be used for substantial changes rather than working directly on
 `main`.
 
 Example:
@@ -458,47 +633,39 @@ Then create a Pull Request on GitHub.
 
 ------------------------------------------------------------------------
 
-## 15. GitHub Authentication on Windows
+## 19. GitHub Authentication on Windows
 
-GitHub does not support account-password authentication for Git
-operations over HTTPS.
+Git Credential Manager is recommended for HTTPS Git operations on
+Windows.
 
-Git Credential Manager is recommended for Windows.
-
-Check whether it is installed:
+Check it with:
 
 ``` powershell
 git credential-manager --version
 ```
 
-Configure Git to use it:
-
-``` powershell
-git config --global credential.helper manager
-```
-
-When the following command is executed:
-
-``` powershell
-git push
-```
-
-Git Credential Manager may display:
+When `git push` requires authentication, Git Credential Manager may
+display:
 
 ``` text
 info: please complete authentication in your browser...
 ```
 
-Complete the GitHub authentication in the web browser.
+Complete authentication using the intended GitHub account.
 
-After successful authentication, Git Credential Manager stores the
-credentials securely for subsequent Git operations.
+Authentication and authorization are separate:
+
+-   **Authentication**: proves which GitHub account is being used.
+-   **Authorization**: determines whether that account may push to
+    `ENMA-WG/enma-poc`.
 
 ------------------------------------------------------------------------
 
-## 16. Common Authentication Error
+## 20. Common GitHub / Git Errors
 
-If the following error appears:
+### 20.1 Authentication error
+
+Example:
 
 ``` text
 remote: Invalid username or token.
@@ -506,403 +673,544 @@ Password authentication is not supported for Git operations.
 fatal: Authentication failed
 ```
 
-confirm that Git Credential Manager is installed:
+Confirm Git Credential Manager:
 
 ``` powershell
 git credential-manager --version
 ```
 
-Then configure it:
+Then retry the Git operation and complete browser authentication if
+requested.
 
-``` powershell
-git config --global credential.helper manager
-```
-
-and retry:
-
-``` powershell
-git push
-```
-
-Complete authentication in the browser when requested.
-
-------------------------------------------------------------------------
-
-## 17. Starting Work on Another PC
-
-When using another PC, such as a home PC or demonstration PC, do not
-copy the `.venv` directory from another machine.
-
-Instead:
-
-1.  Install Git.
-2.  Install Python 3.11.9.
-3.  Clone the repository.
-4.  Create a new `.venv`.
-5.  Activate `.venv`.
-6.  Install `requirements.txt`.
+### 20.2 Permission denied / HTTP 403
 
 Example:
 
-``` powershell
-git clone https://github.com/ENMA-WG/enma-poc.git
-cd enma-poc
-
-py -3.11 -m venv .venv
-.\.venv\Scripts\Activate.ps1
-
-python -m pip install --upgrade pip
-python -m pip install -r requirements.txt
-
-python -c "import ifcopenshell; print(ifcopenshell.version)"
-```
-
-Expected final result:
-
 ``` text
-0.8.5
+remote: Permission to ENMA-WG/enma-poc.git denied to <GitHubUser>.
+fatal: unable to access 'https://github.com/ENMA-WG/enma-poc.git/': The requested URL returned error: 403
 ```
+
+This usually means that the GitHub account being used does not currently
+have sufficient write permission to the repository.
+
+Check:
+
+1.  Which GitHub account is authenticated.
+2.  Whether that account is a member/collaborator with suitable access.
+3.  Whether an organization invitation is still pending.
+4.  Whether the repository or team grants write access.
+
+Do not confuse these settings with:
+
+``` powershell
+git config user.name
+git config user.email
+```
+
+Those values identify commit authorship; they do not grant GitHub
+repository permission.
 
 ------------------------------------------------------------------------
 
-## 18. Deactivate the Virtual Environment
+## 21. Starting Work on Another PC
 
-When development work is finished:
+For a new home PC, notebook PC, company PC, or demonstration PC:
+
+1.  Install Git for Windows.
+2.  Prepare a working folder such as `C:\ENMA-WG`, `D:\ENMA-WG`, or
+    `G:\ENMA-WG`.
+3.  Confirm GitHub access.
+4.  Clone `ENMA-WG/enma-poc`.
+5.  Configure PowerShell ExecutionPolicy as permitted.
+6.  Run `.\scripts\check_environment.ps1`.
+7.  Install/confirm Python 3.11.9.
+8.  Create `.venv`.
+9.  Activate `.venv`.
+10. Install `requirements.txt`.
+11. Verify IfcOpenShell.
+12. Run `.\scripts\check_environment.ps1` again.
+
+Do not copy `.venv` between PCs.
+
+The Git repository and `requirements.txt` are the reproducible handoff
+mechanism; `.venv` is machine-local.
+
+------------------------------------------------------------------------
+
+## 22. Deactivate the Virtual Environment
+
+When finished:
 
 ``` powershell
 deactivate
 ```
 
-The `(.venv)` prefix will disappear from the PowerShell prompt.
+The `(.venv)` prefix disappears from the PowerShell prompt.
 
 ------------------------------------------------------------------------
 
-## 19. Environment Verification Checklist
+## 23. Environment Verification Checklist
 
-The setup is complete when all of the following are confirmed:
+Before starting ENMA-WG PoC development on a PC, confirm:
 
--   Git commands can be executed.
--   The `ENMA-WG/enma-poc` repository has been cloned.
--   Python 3.11.9 is installed.
--   `.venv` has been created with Python 3.11.
--   `.venv` is active.
--   `python --version` reports Python 3.11.9.
--   `requirements.txt` installs successfully.
--   IfcOpenShell imports successfully.
--   `ifcopenshell.version` reports 0.8.5.
--   `git status` works inside the repository.
--   GitHub authentication works for authorized ENMA-WG contributors.
+-   Git is available.
+-   Git Credential Manager is available.
+-   The correct repository has been cloned.
+-   PowerShell can execute the project scripts.
+-   Python 3.11.9 is available.
+-   `.venv` uses Python 3.11.9.
+-   Dependencies from `requirements.txt` are installed.
+-   IfcOpenShell 0.8.5 can be imported.
+-   Git remote `origin` points to `ENMA-WG/enma-poc`.
+-   Git `user.name` and `user.email` are configured.
+-   The current branch and tracking branch are understood.
+-   The GitHub account has the required permission before attempting to
+    push.
 
-At this point the PC is ready for ENMA-WG PoC development.
+The environment checker provides a quick summary:
 
-------------------------------------------------------------------------
-
-## 20. Notes
-
-This document describes the initial Windows development environment for
-the ENMA-WG PoC.
-
-The environment may change as the project evolves. When dependencies or
-setup procedures change, this document and `requirements.txt` should be
-updated together.
-
-Last verified environment:
-
-``` text
-Windows 11
-Python 3.11.9
-IfcOpenShell 0.8.5
+``` powershell
+.\scripts\check_environment.ps1
 ```
 
 ------------------------------------------------------------------------
 
-# 日本語版：ENMA-WG PoC Windows 開発環境セットアップ
+## 24. Notes
 
-## 1. 概要 (Overview)
+This guide is intentionally designed to avoid machine-specific drive
+assumptions.
 
-このドキュメントでは、ENMA-WGの概念実証（PoC）プロジェクト向けのWindows開発環境の設定方法について説明します。
+Prefer commands relative to the repository root:
 
-目的は、会社PC、自宅PC、およびデモ用PCで利用可能な、再現性のある開発環境を構築することです。
+``` powershell
+.\scripts\check_environment.ps1
+.\.venv\Scripts\Activate.ps1
+python -m pip install -r requirements.txt
+```
 
-ENMA-WGのPoCでは、PythonとIfcOpenShellを使用してIFCデータを処理し、MEP数量算出および関連するopenBIM実験を行います。
+rather than repeatedly embedding a specific drive such as `G:` in
+commands.
 
-------------------------------------------------------------------------
-
-## 2. 標準環境 (Standard Environment)
-
-ENMA-WGの初期開発環境は、以下を標準とします。
-
-  コンポーネント   バージョン
-  ---------------- ------------------
-  OS               Windows 11
-  Python           3.11.9 (64-bit)
-  Git              Git for Windows
-  IfcOpenShell     0.8.5
-  リポジトリ       ENMA-WG/enma-poc
-
-このプロジェクトで使用するPythonライブラリは、Pythonの仮想環境（`.venv`）と`requirements.txt`によって管理します。
+The setup procedure should be tested on more than one Windows PC so that
+hidden machine-specific assumptions can be found before other ENMA-WG
+members use it.
 
 ------------------------------------------------------------------------
 
-## 3. Git for Windowsのインストール (Install Git for Windows)
+# 日本語版
 
-Gitがまだインストールされていない場合は、Git for
-Windowsをインストールしてください。
+# ENMA-WG PoC Windows 開発環境セットアップガイド
 
-公式サイト：
+**文書バージョン:** 0.3\
+**更新日:** 2026-09-13\
+**対象リポジトリ:** `ENMA-WG/enma-poc`
 
-https://git-scm.com/download/win
+------------------------------------------------------------------------
 
-インストールが完了したら、PowerShellを起動し、Gitが利用可能であることを確認します。
+## 改訂履歴
+
+  ------------------------------------------------------------------------------------------------------------------------------
+  日付                                            版 主な変更内容
+  --------------------- ---------------------------- ---------------------------------------------------------------------------
+  2026-09-11                                     0.1 Windows開発環境セットアップ手順の初版を作成。
+
+  2026-09-12                                     0.2 複数ドライブ上の作業フォルダに対応し、環境確認スクリプトを追加。
+
+  2026-09-13                                     0.3 Windows実機試験を反映してセットアップ順序を再構成。GitHub権限、PowerShell
+                                                     ExecutionPolicy、初回・最終環境チェック、Git Credential
+                                                     Manager、Gitブランチ同期確認を追加。
+  ------------------------------------------------------------------------------------------------------------------------------
+
+------------------------------------------------------------------------
+
+## 1. 概要
+
+本書は、ENMA-WG
+PoCプロジェクトのWindows開発環境を、複数のPCで再現できるようにするためのセットアップ手順です。
+
+会社PC、自宅PC、ノートPC、デモPCなどで、できるだけ同じ手順を利用することを目的としています。
+
+作業ドライブは固定しません。例えば次のいずれでも構いません。
+
+``` text
+C:\ENMA-WG
+D:\ENMA-WG
+G:\ENMA-WG
+```
+
+本書では、この親フォルダを次のように表記します。
+
+``` text
+<ENMA-WG>
+```
+
+GitHubからcloneした後のリポジトリルートは、
+
+``` text
+<ENMA-WG>\enma-poc
+```
+
+です。
+
+リポジトリルートへ移動した後は、できるだけ相対パスでコマンドを実行します。
+
+------------------------------------------------------------------------
+
+## 2. 標準環境
+
+ENMA-WG PoCの標準環境は次のとおりです。
+
+  項目                     標準
+  ------------------------ ---------------------------------
+  OS                       Windows 11
+  PowerShell               Windows PowerShell / PowerShell
+  Python                   3.11.9（64-bit）
+  Git                      Git for Windows
+  Git Credential Manager   Git for Windows付属・推奨
+  IfcOpenShell             0.8.5
+  Repository               `ENMA-WG/enma-poc`
+  仮想環境                 `.venv`
+
+PC上にPython
+3.14など別バージョンが共存していても構いません。ENMA-WGの仮想環境にはPython
+3.11.9を使用します。
+
+------------------------------------------------------------------------
+
+## 3. Git for Windows のインストール
+
+Gitが入っていない場合はGit for Windowsをインストールします。
+
+PowerShellで確認します。
 
 ``` powershell
 git --version
 ```
 
-実行例：
+例:
 
 ``` text
-git version 2.39.0.windows.2
+git version 2.55.0.windows.5
 ```
 
-Gitのバージョンは、この例と完全に一致する必要はありません。
+Git Credential Managerも確認します。
+
+``` powershell
+git credential-manager --version
+```
+
+バージョン番号が表示されれば利用可能です。
 
 ------------------------------------------------------------------------
 
-## 4. Python 3.11.9のインストール (Install Python 3.11.9)
+## 4. ENMA-WG 作業フォルダの準備
 
-ENMA-WGの初期PoCにおける標準Pythonバージョンは以下のとおりです。
+使用するドライブを決め、親フォルダを作成します。
 
-``` text
-Python 3.11.9 (64-bit)
-```
-
-Pythonの公式サイトからダウンロードしてください。
-
-https://www.python.org/downloads/release/python-3119/
-
-Windows 64ビット版インストーラーを選択します。
-
-インストール時に、以下の設定を有効にしてください。
-
-``` text
-Add python.exe to PATH
-```
-
-インストール完了後、PowerShellを一度閉じてから再度起動します。
-
-インストールされたPythonのバージョンを確認します。
+C:の場合:
 
 ``` powershell
-python --version
+New-Item -ItemType Directory -Path "C:\ENMA-WG" -Force
+Set-Location "C:\ENMA-WG"
 ```
 
-期待される結果：
-
-``` text
-Python 3.11.9
-```
-
-Windows Python
-Launcherが認識しているPythonのインストール状況を確認します。
+D:の場合:
 
 ``` powershell
-py -0p
+New-Item -ItemType Directory -Path "D:\ENMA-WG" -Force
+Set-Location "D:\ENMA-WG"
 ```
 
-実行例：
-
-``` text
--V:3.11 * C:\Users\<username>\AppData\Local\Programs\Python\Python311\python.exe
-```
-
-> **注記：**
-> 1台のPCに複数バージョンのPythonがインストールされている場合があります。そのため、ENMA-WGでは仮想環境を作成する際にPython
-> 3.11を明示的に指定します。
-
-------------------------------------------------------------------------
-
-## 5. ENMA-WG作業フォルダの作成 (Create the ENMA-WG Working Folder)
-
-Windowsでの推奨フォルダ構造は次のとおりです。
-
-``` text
-G:\
-└─ ENMA-WG\
-   └─ enma-poc\
-```
-
-親フォルダを作成します。
+G:の場合:
 
 ``` powershell
 New-Item -ItemType Directory -Path "G:\ENMA-WG" -Force
 Set-Location "G:\ENMA-WG"
 ```
 
-PCに`G:`ドライブがない場合は、別のローカルドライブを使用できます。
-
-例：
+以降、本書では選択した親フォルダを、
 
 ``` text
-C:\ENMA-WG
+<ENMA-WG>
 ```
 
-または：
+と表記します。
 
-``` text
-D:\ENMA-WG
-```
-
-リポジトリフォルダ自体の名前は、次のままとします。
-
-``` text
-enma-poc
-```
+全員が同じドライブ文字を使用することを前提にしません。
 
 ------------------------------------------------------------------------
 
-## 6. GitHubリポジトリのクローン (Clone the GitHub Repository)
+## 5. GitHub リポジトリへのアクセス確認
 
-ENMA-WGのGitHubリポジトリをクローンします。
+対象リポジトリは次のとおりです。
+
+``` text
+https://github.com/ENMA-WG/enma-poc.git
+```
+
+Publicリポジトリは閲覧・cloneできても、**読み取り権限と書き込み権限は別です**。
+
+変更をpushするには、そのPCで使用するGitHubアカウントに、リポジトリまたはENMA-WG
+Organization上の適切な権限が必要です。
+
+特に次の3点を区別してください。
+
+-   `git config user.name` / `user.email`：commitの作成者情報
+-   GitHubブラウザ認証 / Git Credential
+    Manager：使用するGitHubアカウントの認証
+-   Repository / Organization権限：そのアカウントがpushできるかどうか
+
+GitHubへのログインに成功していても、push権限があるとは限りません。
+
+------------------------------------------------------------------------
+
+## 6. GitHub リポジトリのclone
+
+選択した親フォルダへ移動します。
+
+``` powershell
+Set-Location "<ENMA-WG>"
+```
+
+`<ENMA-WG>` は実際のパスへ読み替えます。
+
+例:
+
+``` powershell
+Set-Location "D:\ENMA-WG"
+```
+
+cloneします。
 
 ``` powershell
 git clone https://github.com/ENMA-WG/enma-poc.git
 ```
 
-リポジトリへ移動します。
+リポジトリルートへ移動します。
 
 ``` powershell
-Set-Location "G:\ENMA-WG\enma-poc"
+Set-Location .\enma-poc
 ```
 
-リポジトリの状態を確認します。
+現在位置を確認します。
 
 ``` powershell
-git status
+Get-Location
 ```
 
-期待される結果：
+以降のコマンドは、
 
 ``` text
-On branch main
-Your branch is up to date with 'origin/main'.
-
-nothing to commit, working tree clean
+<ENMA-WG>\enma-poc
 ```
 
-リモートリポジトリを確認します。
+にいることを前提とします。
 
-``` powershell
-git remote -v
-```
-
-期待される結果：
+例えば、
 
 ``` text
-origin  https://github.com/ENMA-WG/enma-poc.git (fetch)
-origin  https://github.com/ENMA-WG/enma-poc.git (push)
+PS D:\ENMA-WG\enma-poc>
 ```
+
+であれば、環境確認スクリプトは、
+
+``` powershell
+.\scripts\check_environment.ps1
+```
+
+と実行します。
+
+すでに `enma-poc` 内にいる場合は、
+
+``` text
+.\enma-poc\scripts\...
+```
+
+とはしません。
 
 ------------------------------------------------------------------------
 
-## 7. Python仮想環境の作成 (Create the Python Virtual Environment)
+## 7. PowerShell ExecutionPolicy の設定
 
-リポジトリのルートディレクトリから作業します。
+新しいWindows PCでは、PowerShellが `.ps1`
+の実行を禁止している場合があります。
 
-``` text
-G:\ENMA-WG\enma-poc
-```
-
-Python 3.11の仮想環境を作成します。
-
-``` powershell
-py -3.11 -m venv .venv
-```
-
-仮想環境を有効化します。
-
-``` powershell
-.\.venv\Scripts\Activate.ps1
-```
-
-有効化後、PowerShellプロンプトの先頭に次のように表示されます。
-
-``` text
-(.venv)
-```
-
-例：
-
-``` text
-(.venv) PS G:\ENMA-WG\enma-poc>
-```
-
-Pythonのバージョンを確認します。
-
-``` powershell
-python --version
-```
-
-期待される結果：
-
-``` text
-Python 3.11.9
-```
-
-どのPython実行ファイルが使用されているか確認します。
-
-``` powershell
-where.exe python
-```
-
-最初のエントリは次のようになります。
-
-``` text
-G:\ENMA-WG\enma-poc\.venv\Scripts\python.exe
-```
-
-これにより、PythonがENMA-WGの仮想環境内で実行されていることを確認できます。
-
-------------------------------------------------------------------------
-
-## 8. PowerShellの実行ポリシー (PowerShell Execution Policy)
-
-一部のWindows
-PCでは、PowerShellによって`Activate.ps1`の実行が妨げられる場合があります。
-
-実行ポリシーのエラーが発生した場合は、現在のポリシーを確認します。
+現在の設定を確認します。
 
 ``` powershell
 Get-ExecutionPolicy -List
 ```
 
-現在のPowerShellセッションだけに適用する一時的な対応は次のとおりです。
+個人PCなど、設定変更が許可されている環境では、本書ではCurrentUserに対して次を使用します。
 
 ``` powershell
-Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+Set-ExecutionPolicy -Scope CurrentUser RemoteSigned
 ```
 
-その後、仮想環境を再度有効化します。
+再確認します。
+
+``` powershell
+Get-ExecutionPolicy -List
+```
+
+例:
+
+``` text
+CurrentUser    RemoteSigned
+```
+
+会社管理PCの場合は、会社のセキュリティポリシーに従ってください。Group
+Policyなど管理者側の設定を無理に回避しないでください。
+
+------------------------------------------------------------------------
+
+## 8. 初回環境チェック
+
+リポジトリには次のスクリプトがあります。
+
+``` text
+scripts\check_environment.ps1
+```
+
+リポジトリルートから実行します。
+
+``` powershell
+.\scripts\check_environment.ps1
+```
+
+このスクリプトは、リポジトリが `C:`、`D:`、`G:`
+などどのドライブにあっても動作するように設計されています。
+
+clone直後でPython仮想環境をまだ作っていない場合は、例えば次のWARNが表示されても正常です。
+
+``` text
+[WARN] Virtual Environment (.venv) not found
+[WARN] IfcOpenShell check skipped (.venv not found)
+```
+
+`WARN`
+は必ずしもエラーを意味しません。この段階では「まだ設定が必要な項目」を示します。
+
+なお、このスクリプトは実際にpushすることでGitHubの書き込み権限を試験することはしません。
+
+------------------------------------------------------------------------
+
+## 9. Python 3.11.9 のインストール・確認
+
+必要に応じてPython 3.11.9（64-bit）をインストールします。
+
+インストール済みPythonを確認します。
+
+``` powershell
+py -0p
+```
+
+例:
+
+``` text
+-V:3.14 *    C:\...\python.exe
+-V:3.11      C:\...\Python311\python.exe
+```
+
+複数バージョンが共存していても問題ありません。
+
+Python 3.11を確認します。
+
+``` powershell
+py -3.11 --version
+```
+
+期待値:
+
+``` text
+Python 3.11.9
+```
+
+システム既定のPythonが別バージョンでも確実に3.11を選択するため、`py -3.11`
+を使用します。
+
+------------------------------------------------------------------------
+
+## 10. Python 仮想環境の作成
+
+PowerShellがリポジトリルート、
+
+``` text
+<ENMA-WG>\enma-poc
+```
+
+にあることを確認します。
+
+Python 3.11を指定して仮想環境を作成します。
+
+``` powershell
+py -3.11 -m venv .venv
+```
+
+`.venv` を別PCからコピーしないでください。各PCで作成します。
+
+------------------------------------------------------------------------
+
+## 11. 仮想環境の有効化
+
+`.venv` を有効化します。
 
 ``` powershell
 .\.venv\Scripts\Activate.ps1
 ```
 
-この設定は、現在のPowerShellプロセスに対してのみ適用されます。
+PowerShellの先頭に、
 
-会社が管理するPCを使用する場合は、所属組織のセキュリティポリシーに従ってください。
+``` text
+(.venv)
+```
+
+が表示されます。
+
+例:
+
+``` text
+(.venv) PS D:\ENMA-WG\enma-poc>
+```
+
+Pythonを確認します。
+
+``` powershell
+python --version
+```
+
+期待値:
+
+``` text
+Python 3.11.9
+```
+
+使用中のPython実体を確認します。
+
+``` powershell
+where.exe python
+```
+
+最初に、
+
+``` text
+<ENMA-WG>\enma-poc\.venv\Scripts\python.exe
+```
+
+が表示されれば、ENMA-WGの仮想環境内でPythonが動作しています。
 
 ------------------------------------------------------------------------
 
-## 9. pipのアップグレード (Upgrade pip)
+## 12. pip の更新
 
-`.venv`を有効にした状態で実行します。
+`.venv` を有効化した状態で実行します。
 
 ``` powershell
 python -m pip install --upgrade pip
 ```
 
-必要に応じてバージョンを確認します。
+必要に応じて確認します。
 
 ``` powershell
 python -m pip --version
@@ -910,15 +1218,15 @@ python -m pip --version
 
 ------------------------------------------------------------------------
 
-## 10. ENMA-WGのPython依存関係のインストール (Install ENMA-WG Python Dependencies)
+## 13. ENMA-WG Python 依存ライブラリのインストール
 
-ENMA-WGメンバーの標準的な方法は、`requirements.txt`に基づいてライブラリをインストールすることです。
+リポジトリの `requirements.txt` から標準ライブラリをインストールします。
 
 ``` powershell
 python -m pip install -r requirements.txt
 ```
 
-初期環境には以下のパッケージが含まれています。
+現在の標準環境は次のとおりです。
 
 ``` text
 ifcopenshell==0.8.5
@@ -931,38 +1239,67 @@ six==1.17.0
 typing_extensions==4.16.0
 ```
 
-Pythonパッケージを追加または更新した開発者は、必要に応じて`requirements.txt`も更新してください。
+依存パッケージを意図的に追加・更新した場合は、必要に応じて
+`requirements.txt` も更新します。
 
 ------------------------------------------------------------------------
 
-## 11. IfcOpenShellの確認 (Verify IfcOpenShell)
+## 14. IfcOpenShell の確認
 
-IfcOpenShellをインポートできることを確認します。
+IfcOpenShellがimportできることを確認します。
 
 ``` powershell
 python -c "import ifcopenshell; print(ifcopenshell.version)"
 ```
 
-期待される結果：
+期待値:
 
 ``` text
 0.8.5
 ```
 
-パッケージの追加情報は、以下のコマンドで確認できます。
+詳細は次でも確認できます。
 
 ``` powershell
 python -m pip show ifcopenshell
 ```
 
-バージョン番号がエラーなしで表示されれば、基本的なENMA-WG
-Python/IFC環境の準備は完了です。
+------------------------------------------------------------------------
+
+## 15. 最終環境チェック
+
+リポジトリルートから再度実行します。
+
+``` powershell
+.\scripts\check_environment.ps1
+```
+
+環境構築とGit同期が完了し、警告事項がなければ、概ね次のようになります。
+
+``` text
+Result: 14 OK / 0 WARN / 0 NG
+
+[READY] ENMA PoC development environment is ready.
+```
+
+チェック項目数は今後スクリプトを改良した場合に変わる可能性があります。
+
+例えば、
+
+``` text
+[WARN] Local branch is ahead of origin/main by 1 commit(s)
+```
+
+はPython環境の異常ではありません。ローカルにremote-tracking
+branchへまだ反映されていないcommitがあることを示します。
+
+環境確認スクリプトは、自動で `git fetch` や `git push` を実行しません。
 
 ------------------------------------------------------------------------
 
-## 12. リポジトリ構造 (Repository Structure)
+## 16. リポジトリ構成
 
-初期のリポジトリ構造は次のとおりです。
+概ね次の構成です。
 
 ``` text
 enma-poc/
@@ -972,69 +1309,84 @@ enma-poc/
 ├─ requirements.txt
 │
 ├─ src/
-│   └─ Python source code
+│  └─ Python source code
 │
 ├─ tests/
-│   └─ automated tests
+│  └─ automated tests
+│
+├─ scripts/
+│  └─ check_environment.ps1
 │
 ├─ data/
-│   └─ README.md
+│  └─ README.md
 │
 ├─ output/
-│   └─ generated CSV and PoC results
+│  └─ generated CSV and PoC results
 │
 ├─ docs/
-│   └─ project documentation
+│  └─ setup_windows.md
 │
 └─ presentation/
-    └─ presentation materials
+   └─ presentation materials
 ```
 
-`.venv`ディレクトリはローカルの開発環境であり、GitHubにコミットしてはいけません。
+`.venv` は各PC固有のローカル開発環境であり、GitHubへcommitしません。
 
 ------------------------------------------------------------------------
 
-## 13. サンプルBIMデータ (Sample BIM Data)
+## 17. サンプルBIMデータ
 
-ENMA-WGのPoCでは、日本の国土交通省（MLIT）が公開しているBIMデータを使用しています。
+ENMA-WG PoCでは、国土交通省（MLIT）が公開しているBIMデータを利用します。
 
-元のBIMデータは、このリポジトリでは配布しません。
+元のBIMデータ自体は、このリポジトリでは配布しません。
 
-サンプルBIMデータの入手および準備方法については、`data/README.md`を参照してください。
+取得・準備方法については、
 
-各開発者は公式の情報源から元のBIMデータを入手し、ローカル環境でIFCファイルを準備してください。
+``` text
+data\README.md
+```
 
-大規模なBIM/IFCファイルは、再配布およびライセンス条件が確認されていない限り、リポジトリにコミットしないでください。
+を参照してください。
+
+各開発者が適切な公式配布元から元データを取得し、必要なIFCファイルをローカルで準備します。
+
+大容量のBIM/IFCファイルは、再配布条件・ライセンス条件を確認せずにリポジトリへcommitしないでください。
 
 ------------------------------------------------------------------------
 
-## 14. Gitの基本ワークフロー (Basic Git Workflow)
+## 18. 基本的なGit作業手順
 
-作業を開始する前に、リポジトリへ移動します。
+作業開始時にリポジトリルートへ移動します。
 
 ``` powershell
-Set-Location "G:\ENMA-WG\enma-poc"
+Set-Location "<ENMA-WG>\enma-poc"
 ```
 
-Python仮想環境を有効化します。
+仮想環境を有効化します。
 
 ``` powershell
 .\.venv\Scripts\Activate.ps1
 ```
 
-Gitの状態を確認します。
+必要に応じて環境を確認します。
+
+``` powershell
+.\scripts\check_environment.ps1
+```
+
+Git状態を確認します。
 
 ``` powershell
 git status
 ```
 
-新しい作業を始める前にGitHubと同期します。
+新しい作業を始める前には、必要に応じてGitHubと同期します。
 
 ``` powershell
 git pull
 ```
 
-ファイルを編集した後は、次のように操作します。
+編集後:
 
 ``` powershell
 git status
@@ -1043,16 +1395,17 @@ git commit -m "Describe the change"
 git push
 ```
 
-共同開発では、`main`ブランチへ直接大幅な変更を加えるのではなく、通常は機能ブランチとPull
-Requestを使用します。
+共同開発で大きな変更を行う場合は、`main`
+へ直接大きな変更を加えるより、feature branchとPull
+Requestの利用を基本とします。
 
-例：
+例:
 
 ``` powershell
 git switch -c feature/pipe-extraction
 ```
 
-作業完了後：
+作業完了後:
 
 ``` powershell
 git add .
@@ -1060,51 +1413,43 @@ git commit -m "Add pipe extraction prototype"
 git push -u origin feature/pipe-extraction
 ```
 
-その後、GitHub上でPull Requestを作成します。
+その後GitHubでPull Requestを作成します。
 
 ------------------------------------------------------------------------
 
-## 15. WindowsでのGitHub認証 (GitHub Authentication on Windows)
+## 19. WindowsでのGitHub認証
 
-GitHubでは、HTTPS経由のGit操作において、アカウントのパスワードによる認証はサポートされていません。
+WindowsのHTTPS Git操作ではGit Credential Managerの利用を推奨します。
 
-WindowsではGit Credential Managerの使用を推奨します。
-
-インストールされているか確認します。
+確認:
 
 ``` powershell
 git credential-manager --version
 ```
 
-GitでGit Credential Managerを使用するよう設定します。
-
-``` powershell
-git config --global credential.helper manager
-```
-
-次のコマンドを実行すると、
-
-``` powershell
-git push
-```
-
-Git Credential
-Managerから次のようなメッセージが表示される場合があります。
+`git push` 時に認証が必要な場合、
 
 ``` text
 info: please complete authentication in your browser...
 ```
 
-ブラウザでGitHub認証を完了してください。
+と表示されることがあります。
 
-認証が成功すると、Git Credential
-Managerはその後のGit操作に使用する認証情報を安全に保存します。
+使用するGitHubアカウントでブラウザ認証を完了してください。
+
+ここでも「認証」と「権限」は別です。
+
+-   **Authentication（認証）**：どのGitHubアカウントを使用しているか
+-   **Authorization（権限）**：そのアカウントが `ENMA-WG/enma-poc`
+    へpushできるか
 
 ------------------------------------------------------------------------
 
-## 16. よくある認証エラー (Common Authentication Error)
+## 20. よくあるGitHub / Gitエラー
 
-以下のエラーが表示された場合：
+### 20.1 認証エラー
+
+例:
 
 ``` text
 remote: Invalid username or token.
@@ -1112,107 +1457,120 @@ Password authentication is not supported for Git operations.
 fatal: Authentication failed
 ```
 
-Git Credential Managerがインストールされていることを確認します。
+Git Credential Managerを確認します。
 
 ``` powershell
 git credential-manager --version
 ```
 
-次に設定します。
+その後Git操作を再試行し、求められた場合はブラウザ認証を完了します。
 
-``` powershell
-git config --global credential.helper manager
-```
+### 20.2 Permission denied / HTTP 403
 
-再試行します。
-
-``` powershell
-git push
-```
-
-要求された場合は、ブラウザで認証を完了してください。
-
-------------------------------------------------------------------------
-
-## 17. 別のPCでの作業開始 (Starting Work on Another PC)
-
-自宅PCやデモ用PCなど、別のPCを使用する場合は、他のマシンから`.venv`ディレクトリをコピーしないでください。
-
-代わりに、次の手順で環境を再構築します。
-
-1.  Gitをインストールする。
-2.  Python 3.11.9をインストールする。
-3.  リポジトリをクローンする。
-4.  新しい`.venv`を作成する。
-5.  `.venv`を有効化する。
-6.  `requirements.txt`から依存パッケージをインストールする。
-
-実行例：
-
-``` powershell
-git clone https://github.com/ENMA-WG/enma-poc.git
-cd enma-poc
-
-py -3.11 -m venv .venv
-.\.venv\Scripts\Activate.ps1
-
-python -m pip install --upgrade pip
-python -m pip install -r requirements.txt
-
-python -c "import ifcopenshell; print(ifcopenshell.version)"
-```
-
-最終的に期待される結果：
+例:
 
 ``` text
-0.8.5
+remote: Permission to ENMA-WG/enma-poc.git denied to <GitHubUser>.
+fatal: unable to access 'https://github.com/ENMA-WG/enma-poc.git/': The requested URL returned error: 403
 ```
+
+これは、現在使用しているGitHubアカウントにリポジトリへの十分な書き込み権限がない場合に発生します。
+
+次を確認します。
+
+1.  どのGitHubアカウントで認証されているか。
+2.  そのアカウントが適切な権限を持つmember/collaboratorになっているか。
+3.  Organizationからの招待が保留中ではないか。
+4.  RepositoryまたはTeamでWrite権限が付与されているか。
+
+次の設定とは別問題です。
+
+``` powershell
+git config user.name
+git config user.email
+```
+
+これらはcommitの作成者情報であり、GitHubへのpush権限を付与するものではありません。
 
 ------------------------------------------------------------------------
 
-## 18. 仮想環境の無効化 (Deactivate the Virtual Environment)
+## 21. 別のPCで作業を開始する場合
 
-開発作業が完了したら、次を実行します。
+新しい自宅PC、ノートPC、会社PC、デモPCでは、次の順序を基本とします。
+
+1.  Git for Windowsをインストールする。
+2.  `C:\ENMA-WG`、`D:\ENMA-WG`、`G:\ENMA-WG`
+    などの作業フォルダを準備する。
+3.  GitHubアクセスを確認する。
+4.  `ENMA-WG/enma-poc` をcloneする。
+5.  許可された範囲でPowerShell ExecutionPolicyを設定する。
+6.  `.\scripts\check_environment.ps1` を初回実行する。
+7.  Python 3.11.9をインストール・確認する。
+8.  `.venv` を作成する。
+9.  `.venv` を有効化する。
+10. `requirements.txt` をインストールする。
+11. IfcOpenShellを確認する。
+12. `.\scripts\check_environment.ps1` を最終実行する。
+
+`.venv` はPC間でコピーしません。
+
+Gitリポジトリと `requirements.txt`
+を、再現可能な共同作業環境の受け渡し手段とします。`.venv`
+は各PC固有です。
+
+------------------------------------------------------------------------
+
+## 22. 仮想環境の終了
+
+作業終了時:
 
 ``` powershell
 deactivate
 ```
 
-PowerShellのプロンプトから`(.venv)`というプレフィックスが消えます。
+PowerShellの `(.venv)` 表示が消えます。
 
 ------------------------------------------------------------------------
 
-## 19. 環境確認チェックリスト (Environment Verification Checklist)
+## 23. 環境確認チェックリスト
 
-以下のすべてが確認できたら、セットアップは完了です。
+ENMA-WG PoCの開発を開始する前に、次を確認します。
 
--   Gitコマンドを実行できる。
--   `ENMA-WG/enma-poc`リポジトリをクローンできている。
--   Python 3.11.9がインストールされている。
--   Python 3.11で`.venv`が作成されている。
--   `.venv`が有効になっている。
--   `python --version`でPython 3.11.9が表示される。
--   `requirements.txt`から依存パッケージを正常にインストールできる。
--   IfcOpenShellを正常にインポートできる。
--   `ifcopenshell.version`で0.8.5が表示される。
--   リポジトリ内で`git status`を実行できる。
--   ENMA-WGの権限を持つ開発者はGitHub認証を正常に行える。
+-   Gitが利用できる。
+-   Git Credential Managerが利用できる。
+-   正しいrepositoryがcloneされている。
+-   PowerShellからプロジェクトの `.ps1` を実行できる。
+-   Python 3.11.9が利用できる。
+-   `.venv` がPython 3.11.9を使用している。
+-   `requirements.txt` の依存ライブラリがインストールされている。
+-   IfcOpenShell 0.8.5をimportできる。
+-   Git remote `origin` が `ENMA-WG/enma-poc` を指している。
+-   Git `user.name` / `user.email` が設定されている。
+-   現在のbranchとtracking branchの状態を把握している。
+-   push前に、使用するGitHubアカウントが必要な権限を持っている。
 
-以上が確認できれば、そのPCでENMA-WG PoCの開発を開始できます。
+簡易確認には次を使用します。
 
-------------------------------------------------------------------------
-
-## 20. 注記 (Notes)
-
-このドキュメントでは、ENMA-WG
-PoCの初期Windows開発環境について説明しています。
-
-プロジェクトの進展に伴い、この環境は変更される可能性があります。依存関係やセットアップ手順に変更があった場合は、このドキュメントと`requirements.txt`を同時に更新してください。
-
-最終確認環境：
-
-``` text
-Windows 11
-Python 3.11.9
-IfcOpenShell 0.8.5
+``` powershell
+.\scripts\check_environment.ps1
 ```
+
+------------------------------------------------------------------------
+
+## 24. 補足
+
+本書は、特定PCや特定ドライブに依存しないことを重視しています。
+
+リポジトリルートへ移動した後は、
+
+``` powershell
+.\scripts\check_environment.ps1
+.\.venv\Scripts\Activate.ps1
+python -m pip install -r requirements.txt
+```
+
+のような相対パスを優先し、毎回 `G:`
+などの特定ドライブをコマンドへ埋め込まないようにします。
+
+また、セットアップ手順は複数のWindows
+PCで実機検証し、他のENMA-WGメンバーが利用する前に、PC固有の暗黙条件をできるだけ洗い出します。
