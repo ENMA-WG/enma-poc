@@ -1,7 +1,7 @@
 # ENMA-WG PoC Windows Development Environment Setup Guide
 
-**Document version:** 0.3\
-**Updated:** 2026-09-13\
+**Document version:** 0.4\
+**Updated:** 2026-09-14\
 **Target repository:** `ENMA-WG/enma-poc`
 
 ------------------------------------------------------------------------
@@ -37,6 +37,17 @@
                                                      Git branch
                                                      synchronization
                                                      checks.
+
+  2026-09-14                                     0.4 Added troubleshooting for
+                                                     Git dubious ownership
+                                                     when a repository is
+                                                     temporarily copied
+                                                     between Windows PCs or
+                                                     users. Clarified that
+                                                     normal multi-PC work
+                                                     should use git clone
+                                                     rather than copying
+                                                     .git repositories.
   ------------------------------------------------------------------------
 
 ------------------------------------------------------------------------
@@ -711,6 +722,41 @@ git config user.email
 Those values identify commit authorship; they do not grant GitHub
 repository permission.
 
+### 20.3 Dubious ownership on a copied repository
+
+Example:
+
+``` text
+fatal: detected dubious ownership in repository at 'G:/ENMA-WG/enma-poc_home_YYYYMMDD'
+```
+
+Git may display this message when a repository, including its `.git`
+directory, was created or copied by a different Windows user or on another
+PC and is then opened by the current Windows user.
+
+If you personally created or intentionally received the copied repository
+and have confirmed that the path is trustworthy, register only that specific
+repository as a safe directory:
+
+``` powershell
+git config --global --add safe.directory G:/ENMA-WG/enma-poc_home_YYYYMMDD
+```
+
+Then confirm the repository before continuing:
+
+``` powershell
+git status
+git log -3 --oneline
+git remote -v
+```
+
+Do not add broad locations such as an entire drive as safe directories.
+
+This procedure is intended mainly for exceptional handoff or temporary
+transport of a repository between PCs. For normal ENMA-WG development on
+multiple PCs, use GitHub as the source of truth and run `git clone` on each
+PC. Do not routinely copy `.git` repositories between PCs.
+
 ------------------------------------------------------------------------
 
 ## 21. Starting Work on Another PC
@@ -733,8 +779,10 @@ For a new home PC, notebook PC, company PC, or demonstration PC:
 
 Do not copy `.venv` between PCs.
 
-The Git repository and `requirements.txt` are the reproducible handoff
-mechanism; `.venv` is machine-local.
+The GitHub repository and `requirements.txt` are the reproducible handoff
+mechanism; `.venv` is machine-local. A newly prepared PC should normally be
+validated by cloning from GitHub rather than by copying an existing working
+directory.
 
 ------------------------------------------------------------------------
 
@@ -802,8 +850,8 @@ members use it.
 
 # ENMA-WG PoC Windows 開発環境セットアップガイド
 
-**文書バージョン:** 0.3\
-**更新日:** 2026-09-13\
+**文書バージョン:** 0.4\
+**更新日:** 2026-09-14\
 **対象リポジトリ:** `ENMA-WG/enma-poc`
 
 ------------------------------------------------------------------------
@@ -820,6 +868,10 @@ members use it.
   2026-09-13                                     0.3 Windows実機試験を反映してセットアップ順序を再構成。GitHub権限、PowerShell
                                                      ExecutionPolicy、初回・最終環境チェック、Git Credential
                                                      Manager、Gitブランチ同期確認を追加。
+
+  2026-09-14                                     0.4 Windows PC間でGitリポジトリを一時コピーした際に発生する
+                                                     dubious ownershipへの対処を追加。通常の複数PC運用では
+                                                     .gitをコピーせず、GitHubからcloneする方針を明確化。
   ------------------------------------------------------------------------------------------------------------------------------
 
 ------------------------------------------------------------------------
@@ -1492,6 +1544,41 @@ git config user.email
 
 これらはcommitの作成者情報であり、GitHubへのpush権限を付与するものではありません。
 
+### 20.3 コピーしたリポジトリで dubious ownership が表示される場合
+
+例:
+
+``` text
+fatal: detected dubious ownership in repository at 'G:/ENMA-WG/enma-poc_home_YYYYMMDD'
+```
+
+`.git` を含むGitリポジトリを別のWindows PCや別のWindowsユーザーから
+コピーし、そのコピーを現在のWindowsユーザーで開いた場合、Gitが
+所有者の違いを検出して操作を停止することがあります。
+
+自分で作成・コピーしたリポジトリであり、そのパスを信頼できることを
+確認できている場合に限り、そのリポジトリだけをsafe directoryとして
+登録します。
+
+``` powershell
+git config --global --add safe.directory G:/ENMA-WG/enma-poc_home_YYYYMMDD
+```
+
+登録後、次を確認してから作業を続けます。
+
+``` powershell
+git status
+git log -3 --oneline
+git remote -v
+```
+
+ドライブ全体など、広い範囲をsafe directoryとして登録しないでください。
+
+この対処は、PC間でリポジトリを一時的に持ち運ぶなどの例外的な場合を
+想定しています。通常のENMA-WGの複数PC運用では、GitHubを正本として、
+各PCで `git clone` してください。日常的に `.git` を含むリポジトリを
+PC間コピーする運用は避けます。
+
 ------------------------------------------------------------------------
 
 ## 21. 別のPCで作業を開始する場合
@@ -1514,9 +1601,10 @@ git config user.email
 
 `.venv` はPC間でコピーしません。
 
-Gitリポジトリと `requirements.txt`
+GitHubリポジトリと `requirements.txt`
 を、再現可能な共同作業環境の受け渡し手段とします。`.venv`
-は各PC固有です。
+は各PC固有です。新しく準備するPCでは、既存の作業フォルダをコピーするのではなく、
+原則としてGitHubからcloneして再現性を確認します。
 
 ------------------------------------------------------------------------
 
