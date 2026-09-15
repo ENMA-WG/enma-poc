@@ -1,0 +1,49 @@
+﻿階,系統コード,系統名称,IFC系統分類,継手種類,TypeName,PortCount,数量_個
+1FL,O 2,E_O油(往),USERDEFINED,エルボ,011_エルボ:Common,2,1
+1FL,CH 3,M031_CH冷温水(往),HEATING,エルボ,011_エルボ:Common,2,1
+1FL,CHR 2,M032_CHR冷温水(還),HEATING,エルボ,011_エルボ:Common,2,1
+1FL,－ 11,M112_W加湿給水,DOMESTICCOLDWATER,径違いT型,021_径違いＴ型:Common,3,1
+1FL,D 24,M121_Dドレン,SEWAGE,エルボ,011_エルボ:Common,2,1
+1FL,D 7,M121_Dドレン,SEWAGE,レジューサ,041_レジューサ:Common,2,1
+1FL,D 11,M121_Dドレン,SEWAGE,レジューサ,041_レジューサ:Common,2,1
+1FL,D 24,M121_Dドレン,SEWAGE,径違い90°大曲がりY,021_径違い90° 大曲がり Y:Common,3,1
+1FL,D 24,M121_Dドレン,SEWAGE,掃除口,071_掃除口:Common,1,1
+1FL,－ 2,P011_W上水,DOMESTICCOLDWATER,キャップ,071_キャップ:Common,1,1
+1FL,－ 2,P011_W上水,DOMESTICCOLDWATER,径違いT型,021_径違いＴ型:Common,3,3
+1FL,P031_V通気 2,P031_V通気,VENT,径違いT型,021_径違いＴ型:Common,3,2
+1FL,X 1,P051_X屋内消火栓,FIREPROTECTION,エルボ,011_エルボ:Common,2,1
+1FL,X 1,P051_X屋内消火栓,FIREPROTECTION,径違いT型,021_径違いＴ型:Common,3,1
+2FL,－ 11,M112_W加湿給水,DOMESTICCOLDWATER,径違いT型,021_径違いＴ型:Common,3,1
+2FL,D 24,M121_Dドレン,SEWAGE,径違い90°大曲がりY,021_径違い90° 大曲がり Y:Common,3,1
+2FL,－ 2,P011_W上水,DOMESTICCOLDWATER,径違いT型,021_径違いＴ型:Common,3,3
+2FL,P031_V通気 2,P031_V通気,VENT,径違いT型,021_径違いＴ型:Common,3,2
+3FL,－ 11,M112_W加湿給水,DOMESTICCOLDWATER,径違いT型,021_径違いＴ型:Common,3,1
+3FL,D 3,M121_Dドレン,SEWAGE,径違い90°大曲がりY,021_径違い90° 大曲がり Y:Common,3,1
+4FL,CH 7,M031_CH冷温水(往),HEATING,径違いT型,021_径違いＴ型:Common,3,1
+4FL,CHR 6,M032_CHR冷温水(還),HEATING,径違いT型,021_径違いＴ型:Common,3,1
+4FL,－ 11,M112_W加湿給水,DOMESTICCOLDWATER,キャップ,071_キャップ:Common,1,1
+4FL,－ 11,M112_W加湿給水,DOMESTICCOLDWATER,径違いT型,021_径違いＴ型:Common,3,1
+4FL,D 24,M121_Dドレン,SEWAGE,エルボ,011_エルボ:Common,2,1
+4FL,D 24,M121_Dドレン,SEWAGE,径違い90°大曲がりY,021_径違い90° 大曲がり Y:Common,3,1
+5FL,OR 1,E_OR油(還),USERDEFINED,エルボ,011_エルボ:Common,2,6
+5FL,O 1,E_O油(往),USERDEFINED,エルボ,011_エルボ:Common,2,5
+5FL,O 2,E_O油(往),USERDEFINED,エルボ,011_エルボ:Common,2,9
+5FL,CH 7,M031_CH冷温水(往),HEATING,エルボ,011_エルボ:Common,2,1
+5FL,CH 3,M031_CH冷温水(往),HEATING,レジューサ,041_レジューサ:Common,2,3
+5FL,CHR 6,M032_CHR冷温水(還),HEATING,エルボ,011_エルボ:Common,2,1
+5FL,CHR 2,M032_CHR冷温水(還),HEATING,レジューサ,041_レジューサ:Common,2,3
+5FL,R 3,M091_R冷媒2way,HEATING,冷媒管エルボ,012_エルボ_冷媒管:Common,2,2
+5FL,R 2,M091_R冷媒2way,HEATING,冷媒管エルボ,012_エルボ_冷媒管:Common,2,2
+5FL,R 1,M091_R冷媒2way,HEATING,冷媒管エルボ,012_エルボ_冷媒管:Common,2,2
+5FL,R 4,M091_R冷媒2way,HEATING,冷媒管エルボ,012_エルボ_冷媒管:Common,2,2
+5FL,－ 233,M112_W加湿給水,DOMESTICCOLDWATER,エルボ,011_エルボ:Common,2,1
+5FL,－ 2,P011_W上水,DOMESTICCOLDWATER,径違いT型,021_径違いＴ型:Common,3,1
+5FL,P031_V通気 2,P031_V通気,VENT,エルボ,011_エルボ:Common,2,1
+PIT,) 1,P021_D汚水,SEWAGE,エルボ,011_エルボ:Common,2,1
+PIT,) 1,P021_D汚水,SEWAGE,ソケット,051_ソケット:Common,2,1
+PIT,P022_D雑排水 1,P022_D雑排水,SEWAGE,エルボ,011_エルボ:Common,2,1
+PIT,P031_V通気 2,P031_V通気,VENT,エルボ,011_エルボ:Common,2,3
+PIT,P031_V通気 2,P031_V通気,VENT,レジューサ,041_レジューサ:Common,2,1
+PIT,P031_V通気 2 | P022_D雑排水 1,P031_V通気 | P022_D雑排水,VENT | SEWAGE,ソケット,051_ソケット:Common,2,1
+PIT,X 1,P051_X屋内消火栓,FIREPROTECTION,エルボ,011_エルボ:Common,2,1
+PIT,X 1,P051_X屋内消火栓,FIREPROTECTION,レジューサ,041_レジューサ:Common,2,1
