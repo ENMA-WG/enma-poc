@@ -24,6 +24,7 @@ class IfcViewerWidget(QWidget):
         # surface. Must be set before the widget is first shown.
         self.plotter.interactor.setAttribute(Qt.WA_NativeWindow, True)
         self._actors: dict[str, list] = {}
+        self._global_ids_by_class: dict[str, list[str]] = {}
         self._theme_name = DEFAULT_THEME
         self.set_theme(self._theme_name)
 
@@ -43,6 +44,7 @@ class IfcViewerWidget(QWidget):
     def clear(self) -> None:
         self.plotter.clear()
         self._actors.clear()
+        self._global_ids_by_class.clear()
         # ``clear`` resets renderer state, so restore the chosen background.
         self.set_theme(self._theme_name)
 
@@ -64,8 +66,25 @@ class IfcViewerWidget(QWidget):
             actors.append(actor)
 
         self._actors[global_id] = actors
+        self._global_ids_by_class.setdefault(mesh.element.is_a(), []).append(global_id)
 
     def highlight(self, global_id: str, color: str = "red") -> None:
+        self._recolor(global_id, color)
+        self.plotter.render()
+
+    def select_by_class(self, ifc_class: str, color: str = "red") -> int:
+        """Highlight every loaded element of ``ifc_class``.
+
+        Returns the number of matched elements so callers (e.g. the chat
+        tool executor) can report back whether anything was found.
+        """
+        global_ids = self._global_ids_by_class.get(ifc_class, [])
+        for global_id in global_ids:
+            self._recolor(global_id, color)
+        self.plotter.render()
+        return len(global_ids)
+
+    def _recolor(self, global_id: str, color: str) -> None:
         actors = self._actors.get(global_id)
         if not actors:
             raise KeyError(f"No mesh loaded for GlobalId {global_id}")

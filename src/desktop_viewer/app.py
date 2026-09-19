@@ -3,6 +3,7 @@ from __future__ import annotations
 import logging
 import sys
 from pathlib import Path
+from typing import Callable
 
 logging.basicConfig(
     level=logging.INFO,
@@ -33,7 +34,12 @@ logger.info(
     "Importing viewer/geometry modules "
     "(pyvista/pyvistaqt import can take several seconds on first run)..."
 )
-from .server.api_server import start_local_server
+from .i18n import get_language, t
+from .i18n import set_language as set_ui_language
+from .server.api_server import set_tool_executor, start_local_server
+from .server.tools import ViewerToolExecutor
+from .server.viewer_bridge import ViewerBridge
+from .ui.ai_settings_dialog import AiSettingsDialog
 from .ui.chat_panel import ChatPanel
 from .viewer.ifc_geometry import iter_all_product_meshes, load_model
 from .viewer.viewer_widget import IfcViewerWidget
@@ -85,6 +91,13 @@ class MainWindow(QMainWindow):
         logger.info("Creating chat panel (QWebEngineView)...")
         self.chat_panel = ChatPanel(self)
 
+        # The chat API runs on FastAPI's own background thread and can only
+        # reach the viewer through this bridge - see ViewerBridge for why.
+        self._viewer_bridge = ViewerBridge()
+        self._viewer_bridge.highlight_requested.connect(self.viewer.highlight)
+        self._viewer_bridge.select_by_class_requested.connect(self.viewer.select_by_class)
+        set_tool_executor(ViewerToolExecutor(self._viewer_bridge))
+
         splitter = QSplitter(self)
         splitter.addWidget(self.viewer)
         splitter.addWidget(self.chat_panel)
@@ -104,59 +117,125 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(central)
 
         self._last_ifc_dir = Path.home()
+        self._i18n_registrations: list[tuple[Callable[[str], None], str]] = []
         self._build_menu_bar()
+        self.chat_panel.set_language(get_language())
 
-        self.statusBar().showMessage("Ready")
+        self.statusBar().showMessage(t("status_ready"))
 
     # ---- menu bar -----------------------------------------------------------
     def _build_menu_bar(self) -> None:
-        file_menu = self.menuBar().addMenu("ファイル(&F)")
+        file_menu = self.menuBar().addMenu(t("file_menu"))
+        self._register_i18n(file_menu.setTitle, "file_menu")
 
-        open_action = QAction("IFC ファイルを開く...", self)
+        open_action = QAction(t("open_ifc_action"), self)
         open_action.setShortcut(QKeySequence.StandardKey.Open)
         open_action.triggered.connect(self.open_ifc_dialog)
+        self._register_i18n(open_action.setText, "open_ifc_action")
         file_menu.addAction(open_action)
 
         file_menu.addSeparator()
 
-        quit_action = QAction("終了", self)
+        quit_action = QAction(t("quit_action"), self)
         # StandardKey.Quit resolves to nothing on Windows, so set it explicitly.
         quit_action.setShortcut(QKeySequence("Ctrl+Q"))
         quit_action.triggered.connect(self.close)
+        self._register_i18n(quit_action.setText, "quit_action")
         file_menu.addAction(quit_action)
 
-        view_menu = self.menuBar().addMenu("表示(&V)")
+        view_menu = self.menuBar().addMenu(t("view_menu"))
+        self._register_i18n(view_menu.setTitle, "view_menu")
+
         # The groups are kept on self: a QActionGroup that goes out of scope
         # takes the exclusivity of its actions with it.
-        self._viewer_theme_group = self._add_theme_menu(
-            view_menu, "3D ビューの背景(&B)", self.viewer.set_theme, self.viewer.theme_name
+        self._viewer_theme_group = self._add_radio_menu(
+            view_menu,
+            "viewer_theme_menu",
+            [("light", "theme_light"), ("dark", "theme_dark")],
+            self.viewer.set_theme,
+            self.viewer.theme_name,
         )
-        self._chat_theme_group = self._add_theme_menu(
-            view_menu, "AI チャットパネル(&C)", self.chat_panel.set_theme, self.chat_panel.theme_name
+        self._chat_theme_group = self._add_radio_menu(
+            view_menu,
+            "chat_theme_menu",
+            [("light", "theme_light"), ("dark", "theme_dark")],
+            self.chat_panel.set_theme,
+            self.chat_panel.theme_name,
+        )
+        # Language names are proper nouns for the language itself, written
+        # the same way regardless of which UI language is active - unlike
+        # the theme options above, they are never passed through t().
+        self._language_group = self._add_radio_menu(
+            view_menu,
+            "language_menu",
+            [("en", "English"), ("ja", "日本語")],
+            self.set_language,
+            get_language(),
+            translate_labels=False,
         )
 
-    def _add_theme_menu(self, parent_menu: QMenu, title, apply_theme, current: str) -> QActionGroup:
-        menu = parent_menu.addMenu(title)
+        ai_menu = self.menuBar().addMenu(t("ai_menu"))
+        self._register_i18n(ai_menu.setTitle, "ai_menu")
+
+        ai_settings_action = QAction(t("ai_settings_action"), self)
+        ai_settings_action.triggered.connect(self.open_ai_settings_dialog)
+        self._register_i18n(ai_settings_action.setText, "ai_settings_action")
+        ai_menu.addAction(ai_settings_action)
+
+    def _add_radio_menu(
+        self,
+        parent_menu: QMenu,
+        title_key: str,
+        options: list[tuple[str, str]],
+        apply_value: Callable[[str], None],
+        current: str,
+        translate_labels: bool = True,
+    ) -> QActionGroup:
+        menu = parent_menu.addMenu(t(title_key))
+        self._register_i18n(menu.setTitle, title_key)
+
         group = QActionGroup(self)
         group.setExclusive(True)
 
-        for name, label in (("light", "ライト"), ("dark", "ダーク")):
-            action = QAction(label, self)
+        for value, label in options:
+            action = QAction(t(label) if translate_labels else label, self)
             action.setCheckable(True)
-            action.setChecked(name == current)
-            action.triggered.connect(lambda _checked=False, n=name: apply_theme(n))
+            action.setChecked(value == current)
+            action.triggered.connect(lambda _checked=False, v=value: apply_value(v))
+            if translate_labels:
+                self._register_i18n(action.setText, label)
             group.addAction(action)
             menu.addAction(action)
 
         return group
 
+    def _register_i18n(self, setter: Callable[[str], None], key: str) -> None:
+        self._i18n_registrations.append((setter, key))
+        setter(t(key))
+
+    def set_language(self, code: str) -> None:
+        set_ui_language(code)
+        for setter, key in self._i18n_registrations:
+            setter(t(key))
+        self.statusBar().showMessage(t("status_ready"))
+        self.chat_panel.set_language(code)
+
+    # ---- AI settings ----------------------------------------------------------
+    def open_ai_settings_dialog(self) -> None:
+        dialog = AiSettingsDialog(self)
+        if dialog.exec() == AiSettingsDialog.DialogCode.Accepted:
+            dialog.save()
+
     # ---- file loading -------------------------------------------------------
     def open_ifc_dialog(self) -> None:
+        file_filter = (
+            f"{t('ifc_file_filter_label')} (*.ifc);;{t('all_files_filter_label')} (*)"
+        )
         path_str, _ = QFileDialog.getOpenFileName(
             self,
-            "IFC ファイルを開く",
+            t("open_ifc_dialog_title"),
             str(self._last_ifc_dir),
-            "IFC ファイル (*.ifc);;すべてのファイル (*)",
+            file_filter,
         )
         if not path_str:
             return
@@ -172,12 +251,12 @@ class MainWindow(QMainWindow):
             return True
         except Exception:
             logger.exception("Failed to load IFC file: %s", ifc_path)
-            self.statusBar().showMessage(f"読み込みに失敗しました: {ifc_path.name}", 8000)
+            self.statusBar().showMessage(t("load_failed_status", name=ifc_path.name), 8000)
             box = QMessageBox(self)
             box.setIcon(QMessageBox.Icon.Critical)
-            box.setWindowTitle("読み込みエラー")
-            box.setText(f"{ifc_path.name} を読み込めませんでした。")
-            box.setInformativeText("詳細は下部のログを確認してください。")
+            box.setWindowTitle(t("load_error_title"))
+            box.setText(t("load_error_text", name=ifc_path.name))
+            box.setInformativeText(t("load_error_informative"))
             box.exec()
             return False
 
@@ -186,7 +265,7 @@ class MainWindow(QMainWindow):
 
     def load_ifc_file(self, ifc_path: Path) -> None:
         logger.info("Opening IFC file: %s", ifc_path)
-        self.statusBar().showMessage(f"Loading {ifc_path.name} ...")
+        self.statusBar().showMessage(t("loading_status", name=ifc_path.name))
         QApplication.processEvents()
 
         model = load_model(ifc_path)
@@ -202,13 +281,15 @@ class MainWindow(QMainWindow):
             if mesh_count % 10 == 0:
                 logger.info("  %d elements loaded...", mesh_count)
                 self.statusBar().showMessage(
-                    f"Loading {ifc_path.name} ... {mesh_count} elements"
+                    t("loading_status_with_count", name=ifc_path.name, count=mesh_count)
                 )
                 QApplication.processEvents()
 
         self.viewer.reset_camera()
         logger.info("Done: %d elements loaded.", mesh_count)
-        self.statusBar().showMessage(f"Loaded {ifc_path.name}: {mesh_count} elements", 5000)
+        self.statusBar().showMessage(
+            t("loaded_status", name=ifc_path.name, count=mesh_count), 5000
+        )
 
 
 def main() -> None:
@@ -241,6 +322,11 @@ def main() -> None:
     window.show()
     splash.finish(window)
     app.processEvents()
+
+    # Point the chat panel at the local API server, replacing the
+    # placeholder. Serving over http (not file://) keeps the frontend and
+    # /chat on the same origin - see api_server.py's StaticFiles mount.
+    window.load_chat_ui(QUrl("http://127.0.0.1:8756/"))
 
     if len(sys.argv) > 1:
         window.try_load_ifc_file(Path(sys.argv[1]))

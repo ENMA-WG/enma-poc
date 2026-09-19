@@ -219,3 +219,9 @@ __marimo__/
 
 # IFC model data is distributed separately.
 data/*.ifc
+
+# chat_ui_src is the TanStack AI frontend's npm project; its build output is
+# committed under src/desktop_viewer/chat_ui (see chat_ui_src/vite.config.ts),
+# but node_modules and the generated theme tokens are not.
+chat_ui_src/node_modules/
+chat_ui_src/src/theme-tokens.css
