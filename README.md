@@ -231,11 +231,84 @@ Additional information about the sample data and conversion assumptions will be 
 The current PoC has been developed and tested primarily with:
 
 - Windows 11
-- Python 3.11
-- IfcOpenShell
+- Python 3.11.9
+- IfcOpenShell 0.8.5
 - Git
 
-A reproducible environment setup procedure, including Python virtual environment creation and required packages, will be documented in this repository.
+The repository includes:
+
+- `requirements.txt` — Python package dependencies
+- `scripts/check_environment.ps1` — Windows development environment checker
+
+### Quick Start
+
+The following example shows the basic setup on Windows PowerShell.
+
+#### 1. Clone the repository
+
+```powershell
+git clone https://github.com/ENMA-WG/enma-poc.git
+cd enma-poc
+```
+
+#### 2. Create a Python virtual environment
+
+```powershell
+py -3.11 -m venv .venv
+.\.venv\Scripts\Activate.ps1
+```
+
+#### 3. Install the required packages
+
+```powershell
+python -m pip install --upgrade pip
+pip install -r requirements.txt
+```
+
+#### 4. Check the environment
+
+```powershell
+.\scripts\check_environment.ps1
+```
+
+The reference environment currently uses Python 3.11.9 and IfcOpenShell 0.8.5.
+
+The environment checker accepts Python 3.11.9 as the reference version and reports other Python 3.11 patch versions as warnings.
+
+#### 5. Prepare the IFC file
+
+Place the IFC model used for the pipe PoC at:
+
+```text
+data/営繕BIMモデル_EM.ifc
+```
+
+The source BIM/IFC model is not redistributed in this repository. Obtain the source BIM data from the original provider and prepare the corresponding IFC file.
+
+For detailed input-file preparation and assumptions, see:
+
+- [Reproducing the Pipe Quantity Results](docs/REPRODUCE_PIPE_RESULTS.md)
+- [日本語版 / Japanese version](docs/REPRODUCE_PIPE_RESULTS_ja.md)
+
+#### 6. Run the pipe quantity PoC
+
+```powershell
+python .\src\extract_pipes.py
+python .\src\summarize_pipes.py
+```
+
+The expected result is:
+
+```text
+Pipe segments : 252
+Summary rows  : 138
+Skipped       : 0
+
+Total length      : 649.090 m
+Horizontal length : 375.963 m
+Vertical length   : 273.127 m
+Sloped length     : 0.000 m
+```
 
 ---
 
