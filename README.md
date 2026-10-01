@@ -89,7 +89,10 @@ The next question is:
 
 > **How do we transform geometrically correct IFC quantities into quantities that an MEP engineer can actually use?**
 
-A step-by-step description for reproducing these results will be added to the repository documentation.
+Detailed step-by-step reproduction instructions are available here:
+
+- [Reproducing the Pipe Quantity Results](docs/REPRODUCE_PIPE_RESULTS.md)
+- [日本語版 / Japanese version](docs/REPRODUCE_PIPE_RESULTS_ja.md)
 
 ---
 
@@ -270,7 +273,10 @@ Summary Rows   : 138
 Skipped        : 0
 ```
 
-Detailed commands, input-file preparation, assumptions, and validation steps will be documented as the next part of the PoC publication.
+For detailed commands, input-file preparation, assumptions, and validation steps, see:
+
+- [Reproducing the Pipe Quantity Results](docs/REPRODUCE_PIPE_RESULTS.md)
+- [日本語版 / Japanese version](docs/REPRODUCE_PIPE_RESULTS_ja.md)
 
 ---
 
