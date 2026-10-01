@@ -49,6 +49,18 @@ The goal is to make the reasoning between the BIM model and the resulting quanti
 
 ## What You Can Explore Here
 
+### Key Documentation
+
+- [Sample Outputs](docs/SAMPLE_OUTPUTS.md) — inspect representative pipe and fitting outputs and how engineering meaning is derived.
+- [ENMA Quantity Takeoff Data Model](docs/DATA_MODEL.md) — explore the data architecture behind specifications, inference, human review, rules, and quantity results.
+- [Reproducing the Pipe Quantity Results](docs/REPRODUCE_PIPE_RESULTS.md) — reproduce the pipe quantities presented at the Tokyo Summit.
+
+Japanese versions are also available:
+
+- [Sample Outputs — 日本語](docs/SAMPLE_OUTPUTS_ja.md)
+- [Data Model — 日本語](docs/DATA_MODEL_ja.md)
+- [Pipe Result Reproduction — 日本語](docs/REPRODUCE_PIPE_RESULTS_ja.md)
+
 This repository accompanies our Tokyo Summit presentation and allows you to:
 
 - **Explore the PoC** — see how real IFC building-services data is processed.
@@ -164,7 +176,7 @@ The longer-term ENMA data model therefore separates:
 
 This architecture is intended to keep the reasoning behind each quantity **traceable**.
 
-More detailed documentation of the data model will be added under `docs/`.
+See the [ENMA Quantity Takeoff Data Model](docs/DATA_MODEL.md) for the detailed architecture and table hierarchy.
 
 ---
 
@@ -197,7 +209,7 @@ The piping PoC includes scripts for tasks such as:
 
 Generated CSV files and representative PoC results.
 
-These files allow the processing results to be inspected without running the entire workflow.
+See [Sample Outputs](docs/SAMPLE_OUTPUTS.md) for an explanation of how the pipe and fitting CSV outputs relate to engineering quantity takeoff.
 
 ### `docs/`
 
