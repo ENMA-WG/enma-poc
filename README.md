@@ -2,6 +2,8 @@
 
 **openBIM | MEP | Quantity Takeoff**
 
+[🇯🇵 日本語版 / Japanese README](README_ja.md)
+
 ## Revisiting the Promise of Automated MEP Quantity Takeoff
 
 Proof of Concept presented at the  
@@ -251,6 +253,22 @@ The repository includes:
 
 - `requirements.txt` — Python package dependencies
 - `scripts/check_environment.ps1` — Windows development environment checker
+
+### Prerequisites
+
+Before starting, make sure the following tools are available:
+
+- Windows 11
+- PowerShell
+- Git
+- Python 3.11
+
+You can check them with:
+
+```powershell
+git --version
+py -3.11 --version
+```
 
 ### Quick Start
 
