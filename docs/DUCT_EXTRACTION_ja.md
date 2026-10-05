@@ -494,3 +494,47 @@ ENMA-WG\
 Automated MEP Quantity Takeoff PoC
 
 本実験は、openBIMを利用した再現可能な設備数量算出と、その先のエンジニアリングワークフローを検討するENMA-WGの研究活動の一部です。
+
+## ダクト数量集計
+
+ダクトの形状・寸法・系統情報を抽出した後、系統・形状・Geometry由来寸法ごとに集計できます。
+
+```powershell
+python src/summarize_ducts.py
+```
+
+入力:
+
+- `output/ducts_detail.csv`
+
+出力:
+
+- `output/ducts_summary.csv`
+
+現在の国土交通省テストIFCでの結果:
+
+- 入力ダクト: 1,077本
+- 集計行数: 234行
+- スキップ: 0本
+- Geometry総延長: 1,088.945 m
+- QTO総延長: 1,088.945 m
+- SA: 512本 / 490.481 m
+- RA: 4本 / 1.400 m
+- OA: 112本 / 148.086 m
+- EA: 449本 / 448.978 m
+
+集計キーは、
+
+`AirType × Shape × Size`
+
+です。
+
+`Size` はIFC Geometryから取得した寸法を保持し、呼称寸法への変換は行いません。
+
+例:
+
+- ROUND: `D200`
+- RECTANGULAR: `750x637.626`
+
+この区別は、後続のEngineering Rule適用で重要です。Geometryから得た直径を、そのまま呼称直径として扱わない設計としています。
+

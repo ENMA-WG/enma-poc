@@ -522,3 +522,45 @@ Automated MEP Quantity Takeoff PoC
 
 This experiment is part of the ENMA-WG investigation into reproducible,
 openBIM-based MEP quantity takeoff and engineering workflows.
+
+## Duct Quantity Summary
+
+After extracting duct geometry and system information, the results can be summarized by air system, shape, and geometry-derived size.
+
+```powershell
+python src/summarize_ducts.py
+```
+
+Input:
+
+- `output/ducts_detail.csv`
+
+Output:
+
+- `output/ducts_summary.csv`
+
+Current MLIT test IFC results:
+
+- Input duct segments: 1,077
+- Summary rows: 234
+- Skipped rows: 0
+- Total geometry length: 1,088.945 m
+- Total QTO length: 1,088.945 m
+- SA: 512 segments / 490.481 m
+- RA: 4 segments / 1.400 m
+- OA: 112 segments / 148.086 m
+- EA: 449 segments / 448.978 m
+
+The summary key is:
+
+`AirType × Shape × Size`
+
+`Size` preserves geometry-derived dimensions. It does not convert them to nominal engineering sizes.
+
+Examples:
+
+- ROUND: `D200`
+- RECTANGULAR: `750x637.626`
+
+This distinction is important for subsequent engineering-rule evaluation. A geometry-derived diameter must not automatically be treated as a nominal diameter.
+
