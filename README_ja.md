@@ -60,12 +60,14 @@ BIMモデルから最終的な数量に至るまでの判断過程を、**明示
 - [Sample Outputs — 日本語](docs/SAMPLE_OUTPUTS_ja.md) — 配管・継手の代表的な出力例と、そこからエンジニアリング上の意味をどのように導くかを確認できます。
 - [Data Model — 日本語](docs/DATA_MODEL_ja.md) — 仕様、推論、技術者による確認、ルール、数量結果を扱うENMAのデータ構造を確認できます。
 - [Pipe Result Reproduction — 日本語](docs/REPRODUCE_PIPE_RESULTS_ja.md) — Tokyo Summitで示した配管数量の再現手順を確認できます。
+- [ダクト形状抽出とQTO検証](docs/DUCT_EXTRACTION_ja.md) — 1,077個の `IfcDuctSegment` をIFC Geometryから抽出し、IFC QTOとクロスチェックする方法を確認できます。
 
 英語版も用意しています。
 
 - [Sample Outputs](docs/SAMPLE_OUTPUTS.md)
 - [ENMA Quantity Takeoff Data Model](docs/DATA_MODEL.md)
 - [Reproducing the Pipe Quantity Results](docs/REPRODUCE_PIPE_RESULTS.md)
+- [Duct Geometry Extraction and QTO Validation](docs/DUCT_EXTRACTION.md)
 
 このリポジトリはTokyo Summitでの発表内容に対応しており、次のことができます。
 
@@ -113,6 +115,31 @@ Tokyo Summitの発表で使用した、再現可能な配管長の結果は次�
 
 - [配管数量結果の再現手順](docs/REPRODUCE_PIPE_RESULTS_ja.md)
 - [English version](docs/REPRODUCE_PIPE_RESULTS.md)
+
+### ダクトGeometry抽出とQTO検証
+
+PoCでは、`IfcDuctSegment` のGeometry抽出にも対象を拡張しています。
+
+現在のMLIT検証IFCでの結果：
+
+| 検証項目 | 結果 |
+|---|---:|
+| IfcDuctSegment | **1,077** |
+| 丸ダクト | **792** |
+| 角ダクト | **285** |
+| UNKNOWN | **0** |
+| Geometry抽出 | **1,077 / 1,077** |
+| Geometry/QTO長さ一致 | **1,077 / 1,077** |
+| 角ダクト断面積一致 | **285 / 285** |
+
+丸ダクトでは、Geometryから算出した円断面積とQTO `GrossCrossSectionArea`との間に、一貫して **0.015038%** の差が確認されました。
+
+このPoCでは、許容値を緩和して差を隠すのではなく、差異そのものを検証結果として保持しています。
+
+また、IFC Geometryの寸法を呼称寸法へ自動的に丸めることはせず、元のGeometry値を保持しています。
+
+- [ダクト形状抽出とQTO検証](docs/DUCT_EXTRACTION_ja.md)
+- [English version](docs/DUCT_EXTRACTION.md)
 
 ---
 
@@ -342,6 +369,16 @@ Vertical length   : 273.127 m
 Sloped length     : 0.000 m
 ```
 
+#### 7. ダクトGeometry抽出PoCを実行
+
+```powershell
+python .\src\extract_ducts.py
+```
+
+期待される検証結果には、**1,077個の `IfcDuctSegment`**（**丸ダクト792個、角ダクト285個**）が含まれます。1,077要素すべてでGeometry抽出に成功し、Geometryから得た長さとIFC QTOの長さが1,077要素すべてで一致します。
+
+Geometryの前提条件、検証許容値、出力列、Geometry/QTO間で確認された差異の詳細は、[ダクト形状抽出とQTO検証](docs/DUCT_EXTRACTION_ja.md)を参照してください。
+
 ---
 
 ## 配管数量結果の再現
@@ -418,7 +455,7 @@ openBIMデータと、実際の数量算出に必要なエンジニアリング�
 - 配管数量の抽出
 - 配管継手の調査
 - 施工箇所の解釈
-- ダクト数量算出
+- ダクトGeometry抽出とQTOクロスチェック
 - 設備仕様とのマッピング
 - 推論と技術者確認のワークフロー
 - 数量・労務データモデル

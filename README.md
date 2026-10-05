@@ -1,4 +1,4 @@
-﻿# ENMA-WG PoC
+# ENMA-WG PoC
 
 **openBIM | MEP | Quantity Takeoff**
 
@@ -56,12 +56,14 @@ The goal is to make the reasoning between the BIM model and the resulting quanti
 - [Sample Outputs](docs/SAMPLE_OUTPUTS.md) — inspect representative pipe and fitting outputs and how engineering meaning is derived.
 - [ENMA Quantity Takeoff Data Model](docs/DATA_MODEL.md) — explore the data architecture behind specifications, inference, human review, rules, and quantity results.
 - [Reproducing the Pipe Quantity Results](docs/REPRODUCE_PIPE_RESULTS.md) — reproduce the pipe quantities presented at the Tokyo Summit.
+- [Duct Geometry Extraction and QTO Validation](docs/DUCT_EXTRACTION.md) — inspect how 1,077 `IfcDuctSegment` elements are extracted from IFC geometry and cross-checked against IFC QTO.
 
 Japanese versions are also available:
 
 - [Sample Outputs — 日本語](docs/SAMPLE_OUTPUTS_ja.md)
 - [Data Model — 日本語](docs/DATA_MODEL_ja.md)
 - [Pipe Result Reproduction — 日本語](docs/REPRODUCE_PIPE_RESULTS_ja.md)
+- [Duct Geometry Extraction and QTO Validation — 日本語](docs/DUCT_EXTRACTION_ja.md)
 
 This repository accompanies our Tokyo Summit presentation and allows you to:
 
@@ -107,6 +109,31 @@ Detailed step-by-step reproduction instructions are available here:
 
 - [Reproducing the Pipe Quantity Results](docs/REPRODUCE_PIPE_RESULTS.md)
 - [日本語版 / Japanese version](docs/REPRODUCE_PIPE_RESULTS_ja.md)
+
+### Duct Geometry Extraction and QTO Validation
+
+The PoC has also been extended to `IfcDuctSegment` geometry extraction.
+
+For the current MLIT test IFC:
+
+| Validation | Result |
+|---|---:|
+| IfcDuctSegment | **1,077** |
+| Round ducts | **792** |
+| Rectangular ducts | **285** |
+| Unknown shape | **0** |
+| Geometry extraction | **1,077 / 1,077** |
+| Geometry/QTO length match | **1,077 / 1,077** |
+| Rectangular area match | **285 / 285** |
+
+Round ducts showed a consistent **0.015038%** difference between the geometry-derived circular area and QTO `GrossCrossSectionArea`.
+
+Rather than hiding this difference by relaxing the tolerance, the PoC preserves it as a validation result.
+
+Raw IFC geometry dimensions are also preserved without silently converting them to nominal duct sizes.
+
+- [Duct Geometry Extraction and QTO Validation](docs/DUCT_EXTRACTION.md)
+- [日本語版 / Japanese version](docs/DUCT_EXTRACTION_ja.md)
 
 ---
 
@@ -340,6 +367,16 @@ Vertical length   : 273.127 m
 Sloped length     : 0.000 m
 ```
 
+#### 7. Run the duct geometry extraction PoC
+
+```powershell
+python .\src\extract_ducts.py
+```
+
+The expected validation summary includes **1,077 `IfcDuctSegment` elements**, with **792 round** and **285 rectangular** ducts. Geometry extraction succeeds for all 1,077 elements, and geometry-derived lengths match the IFC QTO lengths for all 1,077 elements.
+
+For detailed geometry assumptions, validation tolerances, output columns, and observed Geometry/QTO differences, see [Duct Geometry Extraction and QTO Validation](docs/DUCT_EXTRACTION.md).
+
 ---
 
 ## Reproducing the Pipe Quantity Results
@@ -416,7 +453,7 @@ Current work includes:
 - piping quantity extraction
 - pipe fitting inspection
 - construction-location interpretation
-- duct quantity takeoff
+- duct geometry extraction and QTO cross-validation
 - engineering specification mapping
 - inference and human-review workflows
 - quantity and labor data models
