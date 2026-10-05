@@ -1,8 +1,25 @@
 """
 ENMA-WG PoC - Duct Geometry Extraction
 
-Extract duct dimensions and quantities from IfcDuctSegment elements
-and cross-check geometry-derived values against IFC QTO values.
+Extract duct dimensions, quantities, and air-system information from
+IfcDuctSegment elements, and cross-check geometry-derived values against
+IFC QTO values.
+
+System extraction:
+    IfcDuctSegment
+      -> IfcRelAssignsToGroup
+      -> IfcDistributionSystem
+
+    The raw IFC system Name and ObjectType are preserved. For the current
+    MLIT test IFC, ObjectType is also mapped to an ENMA air type:
+        101_SA給気 -> SA
+        102_RA還気 -> RA
+        103_OA外気 -> OA
+        105_EA排気 -> EA
+
+    This keeps the IFC source value separate from the engineering
+    interpretation. No inference from duct Name or ObjectType is required
+    when an IfcDistributionSystem assignment is available.
 
 Current target dataset:
     MLIT BIM model (Japan)
@@ -34,6 +51,16 @@ Important:
     circular area and QTO GrossCrossSectionArea. This difference is
     retained as a validation result rather than hidden by relaxing
     the tolerance.
+
+Current validation result for the target IFC:
+    - IfcDuctSegment: 1077
+    - ROUND: 792
+    - RECTANGULAR: 285
+    - System assignment: 1077 / 1077
+    - SA: 512
+    - RA: 4
+    - OA: 112
+    - EA: 449
 
 Output:
     output/ducts_detail.csv
@@ -317,6 +344,60 @@ def get_storey_name(duct):
     return ""
 
 
+
+# ENMA interpretation of the raw IfcDistributionSystem.ObjectType.
+#
+# The raw IFC value is also written to the CSV, so source information
+# remains separate from ENMA's engineering interpretation.
+AIR_TYPE_MAP = {
+    "101_SA給気": "SA",
+    "102_RA還気": "RA",
+    "103_OA外気": "OA",
+    "105_EA排気": "EA",
+}
+
+
+def get_distribution_systems(duct):
+    """
+    Return IfcDistributionSystem objects directly assigned to a duct via:
+
+        IfcDuctSegment
+          -> IfcRelAssignsToGroup
+          -> IfcDistributionSystem
+
+    No inference from element names or connectivity is performed here.
+    """
+    systems = []
+
+    for assignment in getattr(duct, "HasAssignments", []) or []:
+        if not assignment.is_a("IfcRelAssignsToGroup"):
+            continue
+
+        group = getattr(assignment, "RelatingGroup", None)
+
+        if (
+            group is not None
+            and group.is_a("IfcDistributionSystem")
+        ):
+            systems.append(group)
+
+    return systems
+
+
+def interpret_air_type(system_object_type):
+    """
+    Map the raw IFC system ObjectType to an ENMA air type.
+
+    An unmapped value is returned as UNKNOWN rather than guessed from
+    names. This preserves the distinction between IFC source information
+    and engineering interpretation.
+    """
+    if not system_object_type:
+        return "UNKNOWN"
+
+    return AIR_TYPE_MAP.get(system_object_type, "UNKNOWN")
+
+
 def main():
     print("=== ENMA DUCT EXTRACTION ===")
     print()
@@ -357,6 +438,18 @@ def main():
         "RECTANGULAR": 0,
     }
 
+    air_type_counts = {
+        "SA": 0,
+        "RA": 0,
+        "OA": 0,
+        "EA": 0,
+        "UNKNOWN": 0,
+    }
+
+    system_single_count = 0
+    system_missing_count = 0
+    system_multiple_count = 0
+
     for duct in ducts:
 
         # --------------------------------------------------
@@ -375,6 +468,46 @@ def main():
         qto_outer_surface_m2 = qto.get(
             "OuterSurfaceArea"
         )
+
+        # --------------------------------------------------
+        # Distribution system / air type
+        # --------------------------------------------------
+
+        systems = get_distribution_systems(duct)
+
+        system_name = ""
+        system_object_type = ""
+        air_type = "UNKNOWN"
+        system_source = ""
+
+        if len(systems) == 1:
+            system = systems[0]
+            system_name = system.Name or ""
+            system_object_type = system.ObjectType or ""
+            air_type = interpret_air_type(system_object_type)
+            system_source = "IFC_DISTRIBUTION_SYSTEM"
+            system_single_count += 1
+
+        elif len(systems) == 0:
+            system_source = "NOT_ASSIGNED"
+            system_missing_count += 1
+
+        else:
+            system_name = " | ".join(
+                (system.Name or "")
+                for system in systems
+            )
+            system_object_type = " | ".join(
+                (system.ObjectType or "")
+                for system in systems
+            )
+            system_source = "MULTIPLE_IFC_DISTRIBUTION_SYSTEMS"
+            system_multiple_count += 1
+
+        if air_type not in air_type_counts:
+            air_type_counts[air_type] = 0
+
+        air_type_counts[air_type] += 1
 
         # --------------------------------------------------
         # Geometry
@@ -508,6 +641,11 @@ def main():
                 "ObjectType": duct.ObjectType or "",
                 "Storey": get_storey_name(duct),
 
+                "SystemName": system_name,
+                "SystemObjectType": system_object_type,
+                "AirType": air_type,
+                "SystemSource": system_source,
+
                 "Shape": shape,
 
                 "Diameter_mm": (
@@ -601,6 +739,10 @@ def main():
         "Name",
         "ObjectType",
         "Storey",
+        "SystemName",
+        "SystemObjectType",
+        "AirType",
+        "SystemSource",
         "Shape",
         "Diameter_mm",
         "Width_mm",
@@ -658,6 +800,22 @@ def main():
         f"UNKNOWN              : "
         f"{shape_counts.get('UNKNOWN', 0)}"
     )
+
+    print()
+
+    print("Air system")
+    print(f"  SA                  : {air_type_counts.get('SA', 0)}")
+    print(f"  RA                  : {air_type_counts.get('RA', 0)}")
+    print(f"  OA                  : {air_type_counts.get('OA', 0)}")
+    print(f"  EA                  : {air_type_counts.get('EA', 0)}")
+    print(f"  UNKNOWN             : {air_type_counts.get('UNKNOWN', 0)}")
+
+    print()
+
+    print("System assignment")
+    print(f"  Single system       : {system_single_count}")
+    print(f"  No system           : {system_missing_count}")
+    print(f"  Multiple systems    : {system_multiple_count}")
 
     print()
 

@@ -1,4 +1,4 @@
-# ダクト形状抽出とQTO検証
+# ダクト形状・QTO検証・系統情報抽出
 
 ## 概要
 
@@ -6,9 +6,9 @@
 PoCで実施したダクト抽出実験について説明します。
 
 この実験では、IFCのダクト形状から寸法を直接取得し、形状から算出した値とIFC
-Quantity Takeoff（QTO）の値をクロスチェックします。
+Quantity Takeoff（QTO）の値をクロスチェックするとともに、正式なIFC関係をたどって空調系統情報を取得します。
 
-目的は単にダクト数量を取得することだけではありません。IFCモデル内部に存在する複数の情報源が、相互に整合しているかを検証することも目的としています。
+目的は単にダクト数量を取得することだけではありません。Geometry、QTO、関係情報から得られる系統情報を明示的に分離し、相互に確認できる状態にすることも目的としています。
 
 現在の実験対象は次のとおりです。
 
@@ -19,6 +19,9 @@ Quantity Takeoff（QTO）の値をクロスチェックします。
 -   ダクト長
 -   断面積
 -   IFC GeometryとQTO値の比較
+-   `IfcDistributionSystem` の割当確認
+-   IFC由来の系統 `Name` / `ObjectType` の保持
+-   ENMA AirType（SA / RA / OA / EA）への明示的マッピング
 
 > **重要**
 >
@@ -70,6 +73,50 @@ output/ducts_detail.csv
 
 CSVは一般的な表計算ソフトとの互換性を考慮し、UTF-8
 BOM付き（`utf-8-sig`）で出力します。
+
+## 系統情報の抽出経路
+
+現在のスクリプトでは、各 `IfcDuctSegment` から正式なIFCのグループ割当関係をたどり、`IfcDistributionSystem` を取得します。
+
+``` text
+IfcDuctSegment
+  └─ IfcRelAssignsToGroup
+       └─ IfcDistributionSystem
+```
+
+各ダクトについて、IFC由来の系統 `Name` と `ObjectType` を、それぞれ `SystemName`、`SystemObjectType` としてそのまま保持します。
+
+現在のMLIT検証IFCでは、1,077本すべてのダクトに `IfcDistributionSystem` がちょうど1系統ずつ割り当てられていました。
+
+``` text
+Single system       : 1077
+No system           : 0
+Multiple systems    : 0
+```
+
+現在確認された `IfcDistributionSystem.ObjectType` は、ENMAの `AirType` へ次のように明示的に対応付けています。
+
+| `IfcDistributionSystem.ObjectType` | ENMA `AirType` |
+|---|---|
+| `101_SA給気` | `SA` |
+| `102_RA還気` | `RA` |
+| `103_OA外気` | `OA` |
+| `105_EA排気` | `EA` |
+
+結果は次のとおりです。
+
+| AirType | 本数 |
+|---|---:|
+| SA | **512** |
+| RA | **4** |
+| OA | **112** |
+| EA | **449** |
+| UNKNOWN | **0** |
+| **合計** | **1,077** |
+
+このマッピングはIFC生データの取得とは意図的に分離しています。`IfcDistributionSystem` の割当が取得できる場合、ダクト要素自身の `Name` や `ObjectType` からSA/RA/OA/EAを推定しません。
+
+`SystemSource` には系統情報の取得元・状態を記録します。現在の検証結果では1,077行すべてが `IFC_DISTRIBUTION_SYSTEM` です。
 
 ## Geometryの抽出経路
 
@@ -211,6 +258,18 @@ Length match         : 1077/1077
 Area match (all)     : 285/1077
   ROUND              : 0/792
   RECTANGULAR        : 285/285
+
+Air system
+  SA                  : 512
+  RA                  : 4
+  OA                  : 112
+  EA                  : 449
+  UNKNOWN             : 0
+
+System assignment
+  Single system       : 1077
+  No system           : 0
+  Multiple systems    : 0
 ```
 
 ### 長さ
@@ -307,6 +366,10 @@ IFC QTO
   `Name`                      IFC要素名
   `ObjectType`                IFC ObjectType
   `Storey`                    所属階
+  `SystemName`                IFC由来の `IfcDistributionSystem.Name`
+  `SystemObjectType`          IFC由来の `IfcDistributionSystem.ObjectType`
+  `AirType`                   ENMAマッピング：SA / RA / OA / EA / UNKNOWN
+  `SystemSource`               系統情報の取得元・状態
   `Shape`                     ROUND / RECTANGULAR / UNKNOWN
   `Diameter_mm`               Geometryから取得した丸ダクト直径
   `Width_mm`                  Geometryから取得した角ダクト幅
@@ -344,7 +407,7 @@ Geometry抽出
 数量・仕様・労務・工程
 ```
 
-現在のスクリプトが実装しているのは、最初の2段階です。
+現在のスクリプトでは、Geometry生データ抽出、QTOクロスチェック、およびIFC関係に基づく系統情報抽出までを実装しています。呼称寸法、仕様、労務、工程への解釈は別のエンジニアリング処理として扱います。
 
 呼称寸法への解釈は別のエンジニアリング処理であり、ルール、仕様書、参照マスタ、あるいは技術者による確認が必要になる可能性があります。
 
@@ -374,6 +437,7 @@ Excelなどの表計算ソフトでCSVを直接開くと、数値の表示桁数
 -   丸型・角型を対象
 -   Geometry寸法から呼称寸法への変換は未実装
 -   今回のダクト数量実験では継手を未算入
+-   現在の検証IFCでは `IfcDistributionSystem` から空調系統情報を取得
 -   施工箇所や仕様の解釈は未実装
 -   通常とは異なる寸法も自動補正せず保持
 

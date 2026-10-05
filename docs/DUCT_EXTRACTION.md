@@ -1,17 +1,18 @@
-# Duct Geometry Extraction and QTO Validation
+# Duct Geometry, QTO Validation, and System Extraction
 
 ## Overview
 
 This document describes the duct extraction experiment implemented in
 the ENMA-WG Automated MEP Quantity Takeoff PoC.
 
-The experiment extracts dimensions directly from IFC duct geometry and
+The experiment extracts dimensions directly from IFC duct geometry,
 cross-checks the geometry-derived values against IFC Quantity Takeoff
-(QTO) properties.
+(QTO) properties, and extracts air-system information through formal IFC
+relationships.
 
 The purpose is not only to obtain duct quantities, but also to examine
-whether different information sources inside the IFC model are mutually
-consistent.
+whether geometry, QTO, and relationship-based system information inside
+the IFC model can be kept explicit and mutually reviewable.
 
 The current experiment focuses on:
 
@@ -22,6 +23,9 @@ The current experiment focuses on:
 -   duct length
 -   cross-sectional area
 -   comparison between IFC geometry and QTO values
+-   `IfcDistributionSystem` assignment
+-   preservation of raw system `Name` and `ObjectType`
+-   explicit mapping to ENMA air type (SA / RA / OA / EA)
 
 > **Important**
 >
@@ -74,6 +78,56 @@ output/ducts_detail.csv
 
 The CSV is written as UTF-8 with BOM (`utf-8-sig`) for compatibility
 with common spreadsheet applications.
+
+## System Extraction Path
+
+The current script also follows the formal IFC group assignment from each
+`IfcDuctSegment` to `IfcDistributionSystem`:
+
+``` text
+IfcDuctSegment
+  └─ IfcRelAssignsToGroup
+       └─ IfcDistributionSystem
+```
+
+For each duct segment, the script preserves the raw IFC system `Name` and
+`ObjectType` as `SystemName` and `SystemObjectType`.
+
+For the current MLIT test IFC, all 1,077 duct segments have exactly one
+`IfcDistributionSystem` assignment:
+
+``` text
+Single system       : 1077
+No system           : 0
+Multiple systems    : 0
+```
+
+The current source values are explicitly mapped as follows:
+
+| `IfcDistributionSystem.ObjectType` | ENMA `AirType` |
+|---|---|
+| `101_SA給気` | `SA` |
+| `102_RA還気` | `RA` |
+| `103_OA外気` | `OA` |
+| `105_EA排気` | `EA` |
+
+This produces:
+
+| AirType | Count |
+|---|---:|
+| SA | **512** |
+| RA | **4** |
+| OA | **112** |
+| EA | **449** |
+| UNKNOWN | **0** |
+| **Total** | **1,077** |
+
+This mapping is deliberately separated from raw IFC extraction. The script
+does **not** infer SA/RA/OA/EA from the duct element `Name` or `ObjectType`
+when an `IfcDistributionSystem` assignment is available.
+
+`SystemSource` records how the system information was obtained. In the
+current test result, all 1,077 rows use `IFC_DISTRIBUTION_SYSTEM`.
 
 ## Geometry Extraction Path
 
@@ -220,6 +274,18 @@ Length match         : 1077/1077
 Area match (all)     : 285/1077
   ROUND              : 0/792
   RECTANGULAR        : 285/285
+
+Air system
+  SA                  : 512
+  RA                  : 4
+  OA                  : 112
+  EA                  : 449
+  UNKNOWN             : 0
+
+System assignment
+  Single system       : 1077
+  No system           : 0
+  Multiple systems    : 0
 ```
 
 ### Length
@@ -320,6 +386,10 @@ property into a quantity table.
   `Name`                      IFC element name
   `ObjectType`                IFC ObjectType
   `Storey`                    Containing building storey
+  `SystemName`                Raw `IfcDistributionSystem.Name`
+  `SystemObjectType`          Raw `IfcDistributionSystem.ObjectType`
+  `AirType`                   ENMA mapping: SA / RA / OA / EA / UNKNOWN
+  `SystemSource`               Source/status of system assignment
   `Shape`                     ROUND / RECTANGULAR / UNKNOWN
   `Diameter_mm`               Geometry-derived round duct diameter
   `Width_mm`                  Geometry-derived rectangular width
@@ -358,7 +428,7 @@ Nominal / standard size
 Quantity / specification / labor / schedule
 ```
 
-The current script implements the first two stages.
+The current script now implements raw geometry extraction, QTO cross-validation, and relationship-based system extraction. Nominal-size, specification, labor, and schedule interpretation remain separate engineering stages.
 
 Nominal-size interpretation is a separate engineering task and may
 require rules, specifications, reference data, or human review.
@@ -394,6 +464,7 @@ In particular:
 -   round and rectangular profiles are handled
 -   geometry dimensions are not converted to nominal sizes
 -   fittings are not yet included in this duct quantity experiment
+-   air-system information is extracted from `IfcDistributionSystem` in the current test IFC
 -   construction location and specification interpretation are not yet
     included
 -   unusual dimensions are preserved rather than automatically corrected
