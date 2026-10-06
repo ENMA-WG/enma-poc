@@ -57,17 +57,21 @@ BIMモデルから最終的な数量に至るまでの判断過程を、**明示
 
 ### 主なドキュメント
 
+- [ENMA 3.0 FAQ](docs/FAQ_ja.md) — ENMAの考え方、Engineering Knowledge、Human Review、今後の方向をQ&A形式で確認できます。
 - [Sample Outputs — 日本語](docs/SAMPLE_OUTPUTS_ja.md) — 配管・継手の代表的な出力例と、そこからエンジニアリング上の意味をどのように導くかを確認できます。
 - [Data Model — 日本語](docs/DATA_MODEL_ja.md) — 仕様、推論、技術者による確認、ルール、数量結果を扱うENMAのデータ構造を確認できます。
 - [Pipe Result Reproduction — 日本語](docs/REPRODUCE_PIPE_RESULTS_ja.md) — Tokyo Summitで示した配管数量の再現手順を確認できます。
 - [ダクト形状・QTO検証・系統情報抽出](docs/DUCT_EXTRACTION_ja.md) — 1,077個の `IfcDuctSegment` をIFC Geometryから抽出し、IFC QTOとのクロスチェックおよび `IfcDistributionSystem` からの系統情報取得を確認できます。
+- [ダクト Engineering Information 検証](docs/DUCT_ENGINEERING_INFORMATION_ja.md) — 再現可能なダクト数量から仕様選定へ進む際に、どのEngineering Informationが取得でき、何が不足するかを確認できます。
 
 英語版も用意しています。
 
+- [ENMA 3.0 FAQ](docs/FAQ.md)
 - [Sample Outputs](docs/SAMPLE_OUTPUTS.md)
 - [ENMA Quantity Takeoff Data Model](docs/DATA_MODEL.md)
 - [Reproducing the Pipe Quantity Results](docs/REPRODUCE_PIPE_RESULTS.md)
 - [Duct Geometry, QTO Validation, and System Extraction](docs/DUCT_EXTRACTION.md)
+- [Duct Engineering Information Validation](docs/DUCT_ENGINEERING_INFORMATION.md)
 
 このリポジトリはTokyo Summitでの発表内容に対応しており、次のことができます。
 

@@ -53,17 +53,21 @@ The goal is to make the reasoning between the BIM model and the resulting quanti
 
 ### Key Documentation
 
+- [ENMA 3.0 FAQ](docs/FAQ.md) — start here for an overview of the ENMA approach, engineering knowledge, human review, and future direction.
 - [Sample Outputs](docs/SAMPLE_OUTPUTS.md) — inspect representative pipe and fitting outputs and how engineering meaning is derived.
 - [ENMA Quantity Takeoff Data Model](docs/DATA_MODEL.md) — explore the data architecture behind specifications, inference, human review, rules, and quantity results.
 - [Reproducing the Pipe Quantity Results](docs/REPRODUCE_PIPE_RESULTS.md) — reproduce the pipe quantities presented at the Tokyo Summit.
 - [Duct Geometry, QTO Validation, and System Extraction](docs/DUCT_EXTRACTION.md) — inspect how 1,077 `IfcDuctSegment` elements are extracted from IFC geometry, cross-checked against IFC QTO, and associated with `IfcDistributionSystem`.
+- [Duct Engineering Information Validation](docs/DUCT_ENGINEERING_INFORMATION.md) — examine what engineering information is available or missing when moving from reproducible duct quantities toward specification selection.
 
 Japanese versions are also available:
 
+- [ENMA 3.0 FAQ — 日本語](docs/FAQ_ja.md)
 - [Sample Outputs — 日本語](docs/SAMPLE_OUTPUTS_ja.md)
 - [Data Model — 日本語](docs/DATA_MODEL_ja.md)
 - [Pipe Result Reproduction — 日本語](docs/REPRODUCE_PIPE_RESULTS_ja.md)
 - [Duct Geometry, QTO Validation, and System Extraction — 日本語](docs/DUCT_EXTRACTION_ja.md)
+- [Duct Engineering Information Validation — 日本語](docs/DUCT_ENGINEERING_INFORMATION_ja.md)
 
 This repository accompanies our Tokyo Summit presentation and allows you to:
 
