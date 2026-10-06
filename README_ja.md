@@ -63,6 +63,7 @@ BIMモデルから最終的な数量に至るまでの判断過程を、**明示
 - [Pipe Result Reproduction — 日本語](docs/REPRODUCE_PIPE_RESULTS_ja.md) — Tokyo Summitで示した配管数量の再現手順を確認できます。
 - [ダクト形状・QTO検証・系統情報抽出](docs/DUCT_EXTRACTION_ja.md) — 1,077個の `IfcDuctSegment` をIFC Geometryから抽出し、IFC QTOとのクロスチェックおよび `IfcDistributionSystem` からの系統情報取得を確認できます。
 - [ダクト Engineering Information 検証](docs/DUCT_ENGINEERING_INFORMATION_ja.md) — 再現可能なダクト数量から仕様選定へ進む際に、どのEngineering Informationが取得でき、何が不足するかを確認できます。
+- [ダクト・トポロジー検証](docs/DUCT_TOPOLOGY_VALIDATION_ja.md) — 実IFCデータによる系統所属、Port所有関係、明示接続、幾何的近接性の検証
 
 英語版も用意しています。
 
@@ -72,6 +73,7 @@ BIMモデルから最終的な数量に至るまでの判断過程を、**明示
 - [Reproducing the Pipe Quantity Results](docs/REPRODUCE_PIPE_RESULTS.md)
 - [Duct Geometry, QTO Validation, and System Extraction](docs/DUCT_EXTRACTION.md)
 - [Duct Engineering Information Validation](docs/DUCT_ENGINEERING_INFORMATION.md)
+- [Duct Topology Validation](docs/DUCT_TOPOLOGY_VALIDATION.md)
 
 このリポジトリはTokyo Summitでの発表内容に対応しており、次のことができます。
 

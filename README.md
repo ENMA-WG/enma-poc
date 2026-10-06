@@ -59,6 +59,7 @@ The goal is to make the reasoning between the BIM model and the resulting quanti
 - [Reproducing the Pipe Quantity Results](docs/REPRODUCE_PIPE_RESULTS.md) — reproduce the pipe quantities presented at the Tokyo Summit.
 - [Duct Geometry, QTO Validation, and System Extraction](docs/DUCT_EXTRACTION.md) — inspect how 1,077 `IfcDuctSegment` elements are extracted from IFC geometry, cross-checked against IFC QTO, and associated with `IfcDistributionSystem`.
 - [Duct Engineering Information Validation](docs/DUCT_ENGINEERING_INFORMATION.md) — examine what engineering information is available or missing when moving from reproducible duct quantities toward specification selection.
+- [Duct Topology Validation](docs/DUCT_TOPOLOGY_VALIDATION.md) — Validation of system membership, port ownership, explicit connectivity, and geometric proximity using real IFC data
 
 Japanese versions are also available:
 
@@ -68,6 +69,7 @@ Japanese versions are also available:
 - [Pipe Result Reproduction — 日本語](docs/REPRODUCE_PIPE_RESULTS_ja.md)
 - [Duct Geometry, QTO Validation, and System Extraction — 日本語](docs/DUCT_EXTRACTION_ja.md)
 - [Duct Engineering Information Validation — 日本語](docs/DUCT_ENGINEERING_INFORMATION_ja.md)
+- [Duct Topology Validation — 日本語](docs/DUCT_TOPOLOGY_VALIDATION_ja.md)
 
 This repository accompanies our Tokyo Summit presentation and allows you to:
 
