@@ -269,6 +269,17 @@ Materials related to:
 
 **Revisiting the Promise of Automated MEP Quantity Takeoff**  
 buildingSMART International Summit Tokyo 2026
+October 7, 2026
+
+Tokyo Summit 2026 presentation archive:
+
+- [Presentation Slides (PDF)](presentation/tokyo-summit-2026/Automated_MEP_Quantity_Takeoff_final.pdf)
+- [Submitted Abstract](presentation/tokyo-summit-2026/TOKYO_SUMMIT_2026_ABSTRACT.md)
+- [Speaker Notes](presentation/tokyo-summit-2026/TOKYO_SUMMIT_2026_SPEAKER_NOTES.md)
+
+The presentation materials document the research baseline presented at the
+Tokyo Summit. Development after the Summit continues through GitHub Issues
+and subsequent research activities.
 
 ---
 
