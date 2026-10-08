@@ -70,6 +70,7 @@ Japanese versions are also available:
 - [Duct Geometry, QTO Validation, and System Extraction — 日本語](docs/DUCT_EXTRACTION_ja.md)
 - [Duct Engineering Information Validation — 日本語](docs/DUCT_ENGINEERING_INFORMATION_ja.md)
 - [Duct Topology Validation — 日本語](docs/DUCT_TOPOLOGY_VALIDATION_ja.md)
+- [Python Tools Guide — 日本語](docs/PYTHON_TOOLS_ja.md)
 
 This repository accompanies our Tokyo Summit presentation and allows you to:
 
