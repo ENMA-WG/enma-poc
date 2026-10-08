@@ -228,3 +228,8 @@ output/*.csv
 
 # Generated or extracted IFC files in output/ are not published by default.
 output/*.ifc
+
+# Local presentation working documents
+# Public Q&A is maintained as docs/FAQ.md and docs/FAQ_ja.md.
+docs/東京サミット想定問答集.docx
+docs/東京サミット想定問答集 en-US.docx
