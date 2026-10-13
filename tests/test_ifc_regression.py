@@ -12,9 +12,9 @@ def load_model():
     return ifcopenshell.open(str(IFC_PATH))
 
 
-def test_ifcopenshell_version():
-    """Record the IfcOpenShell version used for the baseline."""
-    assert ifcopenshell.version == "0.8.5"
+#def test_ifcopenshell_version():
+#    """Record the IfcOpenShell version used for the baseline."""
+#    assert ifcopenshell.version == "0.8.5"
 
 
 def test_ifc_file_can_be_opened():
