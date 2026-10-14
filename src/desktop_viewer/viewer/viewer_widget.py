@@ -72,6 +72,45 @@ class IfcViewerWidget(QWidget):
         self._recolor(global_id, color)
         self.plotter.render()
 
+    def focus_elements(self, global_ids: list[str]) -> int:
+        """Move the camera to the combined bounds of loaded IFC elements.
+
+        Returns the number of matched elements.
+        """
+        matched_bounds = []
+
+        for global_id in global_ids:
+            actors = self._actors.get(global_id)
+            if not actors:
+                continue
+
+            for actor in actors:
+                bounds = actor.GetBounds()
+                if bounds is not None:
+                    matched_bounds.append(bounds)
+
+        if not matched_bounds:
+            return 0
+
+        bounds_array = np.asarray(matched_bounds, dtype=float)
+
+        combined_bounds = (
+            float(bounds_array[:, 0].min()),
+            float(bounds_array[:, 1].max()),
+            float(bounds_array[:, 2].min()),
+            float(bounds_array[:, 3].max()),
+            float(bounds_array[:, 4].min()),
+            float(bounds_array[:, 5].max()),
+        )
+
+        self.plotter.reset_camera(bounds=combined_bounds)
+        self.plotter.render()
+
+        return sum(
+            1 for global_id in global_ids
+            if self._actors.get(global_id)
+        )
+
     def select_by_class(self, ifc_class: str, color: str = "red") -> int:
         """Highlight every loaded element of ``ifc_class``.
 
