@@ -39,6 +39,7 @@ from .i18n import set_language as set_ui_language
 from .server.api_server import set_tool_executor, start_local_server
 from .server.tools import ViewerToolExecutor
 from .server.viewer_bridge import ViewerBridge
+from .review.connection_review import load_connection_review
 from .ui.ai_settings_dialog import AiSettingsDialog
 from .ui.chat_panel import ChatPanel
 from .viewer.ifc_geometry import iter_all_product_meshes, load_model
@@ -285,8 +286,42 @@ class MainWindow(QMainWindow):
                 )
                 QApplication.processEvents()
 
-        self.viewer.reset_camera()
+        review_csv = Path("output/nonzero_port_connections.csv")
+        relationship_step_id = "97948"
+
+        try:
+            review = load_connection_review(
+                review_csv,
+                relationship_step_id,
+            )
+
+            for global_id in review.owner_global_ids:
+                self.viewer.highlight(global_id, "red")
+
+            matched = self.viewer.focus_elements(review.owner_global_ids)
+
+            logger.info(
+                "Connection review %s: %s <-> %s, "
+                "system=%s, port_distance=%.1f mm, "
+                "bbox_overlap=%s, focused=%d",
+                review.relationship_step_id,
+                review.owner1_name,
+                review.owner2_name,
+                review.system_names,
+                review.port_distance_mm,
+                review.bbox_overlap,
+                matched,
+            )
+
+        except (KeyError, FileNotFoundError, ValueError):
+            logger.exception(
+                "Failed to display connection review %s",
+                relationship_step_id,
+            )
+            self.viewer.reset_camera()
+
         logger.info("Done: %d elements loaded.", mesh_count)
+
         self.statusBar().showMessage(
             t("loaded_status", name=ifc_path.name, count=mesh_count), 5000
         )
