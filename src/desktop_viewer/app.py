@@ -39,7 +39,7 @@ from .i18n import set_language as set_ui_language
 from .server.api_server import set_tool_executor, start_local_server
 from .server.tools import ViewerToolExecutor
 from .server.viewer_bridge import ViewerBridge
-from .review.connection_review import load_connection_review
+from .review.connection_review import ConnectionReview, load_connection_reviews
 from .ui.ai_settings_dialog import AiSettingsDialog
 from .ui.chat_panel import ChatPanel
 from .viewer.ifc_geometry import iter_all_product_meshes, load_model
@@ -116,9 +116,14 @@ class MainWindow(QMainWindow):
         central_layout.addWidget(splitter, stretch=4)
         central_layout.addWidget(self.log_panel, stretch=1)
         self.setCentralWidget(central)
-
         self._last_ifc_dir = Path.home()
+
+        self.connection_reviews: list[ConnectionReview] = []
+        self.connection_review_index = -1
+        self.current_review_global_ids: list[str] = []
+
         self._i18n_registrations: list[tuple[Callable[[str], None], str]] = []
+
         self._build_menu_bar()
         self.chat_panel.set_language(get_language())
 
@@ -264,6 +269,48 @@ class MainWindow(QMainWindow):
     def load_chat_ui(self, url: QUrl) -> None:
         self.chat_panel.load_chat_ui(url)
 
+    def show_connection_review(self, index: int) -> None:
+        """Display one connection review in the 3D viewer."""
+        if not self.connection_reviews:
+            logger.warning("No connection reviews are loaded.")
+            return
+
+        if index < 0 or index >= len(self.connection_reviews):
+            logger.warning(
+                "Connection review index out of range: %d",
+                index,
+            )
+            return
+
+        # Restore the elements highlighted by the previous review.
+        if self.current_review_global_ids:
+            self.viewer.restore_colors(self.current_review_global_ids)
+
+        review = self.connection_reviews[index]
+
+        for global_id in review.owner_global_ids:
+            self.viewer.highlight(global_id, "red")
+
+        matched = self.viewer.focus_elements(review.owner_global_ids)
+
+        self.connection_review_index = index
+        self.current_review_global_ids = list(review.owner_global_ids)
+
+        logger.info(
+            "Connection review %d/%d: relationship=%s, "
+            "%s <-> %s, system=%s, port_distance=%.1f mm, "
+            "bbox_overlap=%s, focused=%d",
+            index + 1,
+            len(self.connection_reviews),
+            review.relationship_step_id,
+            review.owner1_name,
+            review.owner2_name,
+            review.system_names,
+            review.port_distance_mm,
+            review.bbox_overlap,
+            matched,
+        )
+
     def load_ifc_file(self, ifc_path: Path) -> None:
         logger.info("Opening IFC file: %s", ifc_path)
         self.statusBar().showMessage(t("loading_status", name=ifc_path.name))
@@ -287,37 +334,27 @@ class MainWindow(QMainWindow):
                 QApplication.processEvents()
 
         review_csv = Path("output/nonzero_port_connections.csv")
-        relationship_step_id = "97948"
 
         try:
-            review = load_connection_review(
-                review_csv,
-                relationship_step_id,
-            )
-
-            for global_id in review.owner_global_ids:
-                self.viewer.highlight(global_id, "red")
-
-            matched = self.viewer.focus_elements(review.owner_global_ids)
+            self.connection_reviews = load_connection_reviews(review_csv)
+            self.connection_review_index = -1
+            self.current_review_global_ids = []
 
             logger.info(
-                "Connection review %s: %s <-> %s, "
-                "system=%s, port_distance=%.1f mm, "
-                "bbox_overlap=%s, focused=%d",
-                review.relationship_step_id,
-                review.owner1_name,
-                review.owner2_name,
-                review.system_names,
-                review.port_distance_mm,
-                review.bbox_overlap,
-                matched,
+                "Loaded %d connection reviews.",
+                len(self.connection_reviews),
             )
 
-        except (KeyError, FileNotFoundError, ValueError):
-            logger.exception(
-                "Failed to display connection review %s",
-                relationship_step_id,
-            )
+            if self.connection_reviews:
+                self.show_connection_review(0)
+            else:
+                self.viewer.reset_camera()
+
+        except (FileNotFoundError, ValueError):
+            logger.exception("Failed to load connection reviews.")
+            self.connection_reviews = []
+            self.connection_review_index = -1
+            self.current_review_global_ids = []
             self.viewer.reset_camera()
 
         logger.info("Done: %d elements loaded.", mesh_count)
