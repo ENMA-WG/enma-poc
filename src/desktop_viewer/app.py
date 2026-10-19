@@ -18,10 +18,13 @@ from PySide6.QtGui import QAction, QActionGroup, QKeySequence, QPixmap
 from PySide6.QtWidgets import (
     QApplication,
     QFileDialog,
+    QHBoxLayout,
+    QLabel,
     QMainWindow,
     QMenu,
     QMessageBox,
     QPlainTextEdit,
+    QPushButton,
     QSplashScreen,
     QSplitter,
     QVBoxLayout,
@@ -99,9 +102,37 @@ class MainWindow(QMainWindow):
         self._viewer_bridge.select_by_class_requested.connect(self.viewer.select_by_class)
         set_tool_executor(ViewerToolExecutor(self._viewer_bridge))
 
+        # Connection review navigation bar
+        self.review_position_label = QLabel("Connection Review: - / -", self)
+
+        self.review_previous_button = QPushButton("← Previous", self)
+        self.review_previous_button.clicked.connect(
+            lambda: self.show_connection_review(self.connection_review_index - 1)
+        )
+
+        self.review_next_button = QPushButton("Next →", self)
+        self.review_next_button.clicked.connect(
+            lambda: self.show_connection_review(self.connection_review_index + 1)
+        )
+
+        review_bar = QWidget(self)
+        review_bar_layout = QHBoxLayout(review_bar)
+        review_bar_layout.setContentsMargins(6, 4, 6, 4)
+        review_bar_layout.addWidget(self.review_position_label)
+        review_bar_layout.addStretch()
+        review_bar_layout.addWidget(self.review_previous_button)
+        review_bar_layout.addWidget(self.review_next_button)
+
+        viewer_container = QWidget(self)
+        viewer_layout = QVBoxLayout(viewer_container)
+        viewer_layout.setContentsMargins(0, 0, 0, 0)
+        viewer_layout.addWidget(review_bar)
+        viewer_layout.addWidget(self.viewer, stretch=1)
+
         splitter = QSplitter(self)
-        splitter.addWidget(self.viewer)
+        splitter.addWidget(viewer_container)
         splitter.addWidget(self.chat_panel)
+
         splitter.setStretchFactor(0, 3)
         splitter.setStretchFactor(1, 2)
         # A QWebEngineView with no page loaded reports a 0x0 size hint, and
@@ -295,6 +326,14 @@ class MainWindow(QMainWindow):
 
         self.connection_review_index = index
         self.current_review_global_ids = list(review.owner_global_ids)
+
+        self.review_position_label.setText(
+            f"Connection Review: {index + 1} / {len(self.connection_reviews)}"
+        )
+        self.review_previous_button.setEnabled(index > 0)
+        self.review_next_button.setEnabled(
+            index < len(self.connection_reviews) - 1
+        )
 
         logger.info(
             "Connection review %d/%d: relationship=%s, "
