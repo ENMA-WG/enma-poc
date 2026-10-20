@@ -24,6 +24,7 @@ class IfcViewerWidget(QWidget):
         # surface. Must be set before the widget is first shown.
         self.plotter.interactor.setAttribute(Qt.WA_NativeWindow, True)
         self._actors: dict[str, list] = {}
+        self._original_colors: dict[str, list] = {}
         self._global_ids_by_class: dict[str, list[str]] = {}
         self._theme_name = DEFAULT_THEME
         self.set_theme(self._theme_name)
@@ -44,6 +45,7 @@ class IfcViewerWidget(QWidget):
     def clear(self) -> None:
         self.plotter.clear()
         self._actors.clear()
+        self._original_colors.clear()
         self._global_ids_by_class.clear()
         # ``clear`` resets renderer state, so restore the chosen background.
         self.set_theme(self._theme_name)
@@ -66,11 +68,75 @@ class IfcViewerWidget(QWidget):
             actors.append(actor)
 
         self._actors[global_id] = actors
+        self._original_colors[global_id] = [
+            actor.prop.color for actor in actors
+        ]
         self._global_ids_by_class.setdefault(mesh.element.is_a(), []).append(global_id)
 
     def highlight(self, global_id: str, color: str = "red") -> None:
         self._recolor(global_id, color)
         self.plotter.render()
+
+    def restore_colors(self, global_ids: list[str]) -> int:
+        """Restore the original colors of loaded IFC elements."""
+        restored = 0
+
+        for global_id in global_ids:
+            actors = self._actors.get(global_id)
+            colors = self._original_colors.get(global_id)
+
+            if not actors or not colors:
+                continue
+
+            for actor, color in zip(actors, colors):
+                actor.prop.color = color
+
+            restored += 1
+
+        if restored:
+            self.plotter.render()
+
+        return restored
+
+
+    def focus_elements(self, global_ids: list[str]) -> int:
+        """Move the camera to the combined bounds of loaded IFC elements.
+
+        Returns the number of matched elements.
+        """
+        matched_bounds = []
+
+        for global_id in global_ids:
+            actors = self._actors.get(global_id)
+            if not actors:
+                continue
+
+            for actor in actors:
+                bounds = actor.GetBounds()
+                if bounds is not None:
+                    matched_bounds.append(bounds)
+
+        if not matched_bounds:
+            return 0
+
+        bounds_array = np.asarray(matched_bounds, dtype=float)
+
+        combined_bounds = (
+            float(bounds_array[:, 0].min()),
+            float(bounds_array[:, 1].max()),
+            float(bounds_array[:, 2].min()),
+            float(bounds_array[:, 3].max()),
+            float(bounds_array[:, 4].min()),
+            float(bounds_array[:, 5].max()),
+        )
+
+        self.plotter.reset_camera(bounds=combined_bounds)
+        self.plotter.render()
+
+        return sum(
+            1 for global_id in global_ids
+            if self._actors.get(global_id)
+        )
 
     def select_by_class(self, ifc_class: str, color: str = "red") -> int:
         """Highlight every loaded element of ``ifc_class``.
